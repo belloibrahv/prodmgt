@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: techvaults-prodmgt
+    runtime: docker
+    plan: starter
+    healthCheckPath: /login
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false
