@@ -40,27 +40,32 @@ export async function getAllTasks(): Promise<TaskWithRelations[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  return prisma.task.findMany({
-    where: {
-      parentId: null,
-      project: {
-        OR: [
-          { ownerId: session.user.id },
-          { members: { some: { userId: session.user.id } } },
-        ],
+  try {
+    return prisma.task.findMany({
+      where: {
+        parentId: null,
+        project: {
+          OR: [
+            { ownerId: session.user.id },
+            { members: { some: { userId: session.user.id } } },
+          ],
+        },
       },
-    },
-    include: {
-      project: { select: { id: true, name: true, color: true, emoji: true } },
-      assignee: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
-      creator: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
-      milestone: true,
-      subtasks: true,
-      comments: { include: { user: { select: { id: true, name: true, email: true, image: true, jobTitle: true } } }, orderBy: { createdAt: "asc" } },
-      tags: { include: { tag: true } },
-    },
-    orderBy: [{ dueDate: "asc" }, { priority: "desc" }],
-  }) as unknown as TaskWithRelations[];
+      include: {
+        project: { select: { id: true, name: true, color: true, emoji: true } },
+        assignee: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
+        creator: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
+        milestone: true,
+        subtasks: true,
+        comments: { include: { user: { select: { id: true, name: true, email: true, image: true, jobTitle: true } } }, orderBy: { createdAt: "asc" } },
+        tags: { include: { tag: true } },
+      },
+      orderBy: [{ dueDate: "asc" }, { priority: "desc" }],
+    }) as unknown as TaskWithRelations[];
+  } catch (error) {
+    console.error("Error fetching all tasks:", error);
+    return [];
+  }
 }
 
 export async function createTask(projectId: string, formData: FormData): Promise<ActionResult<{ id: string }>> {
