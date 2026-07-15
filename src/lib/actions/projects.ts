@@ -162,3 +162,116 @@ export async function deleteProject(id: string): Promise<ActionResult> {
   revalidatePath("/dashboard");
   return { success: true, data: null };
 }
+
+export async function addProjectMember(projectId: string, formData: FormData): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+
+  const email = formData.get("email") as string;
+  const role = formData.get("role") as string;
+
+  if (!email || !role) return { success: false, error: "Email and role are required" };
+
+  // Check if user exists
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return { success: false, error: "User with this email not found. Please ask them to sign up first." };
+
+  // Check if user is already a member
+  const existingMember = await prisma.projectMember.findFirst({
+    where: { projectId, userId: user.id },
+  });
+  if (existingMember) return { success: false, error: "User is already a member of this project" };
+
+  // Check if user has permission (owner or admin)
+  const project = await prisma.project.findFirst({
+    where: { id: projectId },
+    include: { members: true },
+  });
+  if (!project) return { success: false, error: "Project not found" };
+
+  const currentUserMember = project.members.find(m => m.userId === session.user.id);
+  if (!currentUserMember || (currentUserMember.role !== "OWNER" && currentUserMember.role !== "ADMIN")) {
+    return { success: false, error: "You don't have permission to add members" };
+  }
+
+  // Add member
+  await prisma.projectMember.create({
+    data: {
+      projectId,
+      userId: user.id,
+      role: role as never,
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: {
+      action: `added ${user.name || user.email} to project`,
+      entity: "project",
+      entityId: projectId,
+      detail: `as ${role.toLowerCase()}`,
+      userId: session.user.id,
+      projectId,
+    },
+  });
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/projects");
+  return { success: true, data: null };
+}
+
+export async function removeProjectMember(projectId: string, userId: string): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+
+  // Check permissions
+  const project = await prisma.project.findFirst({
+    where: { id: projectId },
+    include: { members: true },
+  });
+  if (!project) return { success: false, error: "Project not found" };
+
+  const currentUserMember = project.members.find(m => m.userId === session.user.id);
+  if (!currentUserMember || (currentUserMember.role !== "OWNER" && currentUserMember.role !== "ADMIN")) {
+    return { success: false, error: "You don't have permission to remove members" };
+  }
+
+  // Don't allow removing the owner
+  if (userId === project.ownerId) return { success: false, error: "Cannot remove project owner" };
+
+  await prisma.projectMember.deleteMany({
+    where: { projectId, userId },
+  });
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/projects");
+  return { success: true, data: null };
+}
+
+export async function updateProjectMemberRole(projectId: string, userId: string, role: string): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+
+  // Check permissions
+  const project = await prisma.project.findFirst({
+    where: { id: projectId },
+    include: { members: true },
+  });
+  if (!project) return { success: false, error: "Project not found" };
+
+  const currentUserMember = project.members.find(m => m.userId === session.user.id);
+  if (!currentUserMember || currentUserMember.role !== "OWNER") {
+    return { success: false, error: "Only project owners can change member roles" };
+  }
+
+  // Don't allow changing owner's role
+  if (userId === project.ownerId) return { success: false, error: "Cannot change owner's role" };
+
+  await prisma.projectMember.updateMany({
+    where: { projectId, userId },
+    data: { role: role as never },
+  });
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/projects");
+  return { success: true, data: null };
+}

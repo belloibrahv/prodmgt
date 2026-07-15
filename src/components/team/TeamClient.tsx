@@ -5,6 +5,7 @@ import { MdAdd, MdGroup, MdEmail, MdWork, MdAssignment } from "react-icons/md";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
+import InviteTeamMemberModal from "./InviteTeamMemberModal";
 import { cn } from "@/lib/utils";
 
 interface TeamMember {
@@ -22,6 +23,7 @@ interface TeamMember {
 
 export default function TeamClient({ members }: { members: TeamMember[] }) {
   const [search, setSearch] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const filtered = members.filter(
     (m) =>
@@ -53,7 +55,7 @@ export default function TeamClient({ members }: { members: TeamMember[] }) {
               className="bg-transparent text-sm text-tva-ink placeholder:text-tva-ink-m outline-none w-44"
             />
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setShowInviteModal(true)}>
             <MdAdd size={18} /> Invite Member
           </Button>
         </div>
@@ -72,6 +74,11 @@ export default function TeamClient({ members }: { members: TeamMember[] }) {
           ))}
         </div>
       )}
+
+      <InviteTeamMemberModal
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
     </div>
   );
 }

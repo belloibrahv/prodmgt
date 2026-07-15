@@ -17,7 +17,8 @@ import ProjectMilestones from "./ProjectMilestones";
 import NewTaskModal from "@/components/tasks/NewTaskModal";
 import EditProjectModal from "./EditProjectModal";
 import NewDocumentModal from "@/components/documents/NewDocumentModal";
-import { deleteProject } from "@/lib/actions/projects";
+import InviteMemberModal from "./InviteMemberModal";
+import { deleteProject, removeProjectMember, updateProjectMemberRole } from "@/lib/actions/projects";
 import { cn } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
 
@@ -32,6 +33,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
   const [showNewTask, setShowNewTask] = useState(false);
   const [showEditProject, setShowEditProject] = useState(false);
   const [showNewDoc, setShowNewDoc] = useState(false);
+  const [showInviteMember, setShowInviteMember] = useState(false);
   const pct = getProgressPercent(project.tasks);
 
   function handleDelete() {
@@ -156,6 +158,11 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
               <Button size="sm" onClick={() => setShowNewDoc(true)}><Plus size={13} /> Add Doc</Button>
             </div>
           )}
+          {tab === "Members" && (
+            <div className="ml-auto pb-1">
+              <Button size="sm" onClick={() => setShowInviteMember(true)}><Plus size={13} /> Invite Member</Button>
+            </div>
+          )}
         </div>
 
         {/* Tab content */}
@@ -168,7 +175,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
           )}
           {tab === "Milestones" && <ProjectMilestones milestones={project.milestones} tasks={project.tasks} />}
           {tab === "Documents" && <ProjectDocuments documents={project.documents} />}
-          {tab === "Members" && <ProjectMembersTab members={project.members} />}
+          {tab === "Members" && <ProjectMembersTab members={project.members} projectId={project.id} ownerId={project.ownerId} />}
         </div>
       </div>
 
@@ -191,6 +198,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
         onClose={() => setShowNewDoc(false)}
         projectId={project.id}
         projectName={project.name}
+      />
+
+      <InviteMemberModal
+        open={showInviteMember}
+        onClose={() => setShowInviteMember(false)}
+        projectId={project.id}
       />
     </>
   );
@@ -254,18 +267,64 @@ function ProjectOverview({ project, pct }: { project: ProjectWithRelations; pct:
 }
 
 // ── Members sub-component ─────────────────────────────────────
-function ProjectMembersTab({ members }: { members: ProjectWithRelations["members"] }) {
+function ProjectMembersTab({ members, projectId, ownerId }: { members: ProjectWithRelations["members"]; projectId: string; ownerId: string }) {
+  const [pending, startTransition] = useTransition();
+
+  function handleRemoveMember(userId: string, userName: string) {
+    if (!confirm(`Remove ${userName} from this project?`)) return;
+    startTransition(async () => {
+      const res = await removeProjectMember(projectId, userId);
+      if (res.success) {
+        toast.success("Member removed");
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  function handleRoleChange(userId: string, newRole: string) {
+    startTransition(async () => {
+      const res = await updateProjectMemberRole(projectId, userId, newRole);
+      if (res.success) {
+        toast.success("Role updated");
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {members.map((m) => (
-        <div key={m.id} className="bg-white border border-tva-border rounded-16 p-4 flex items-center gap-3 shadow-sm">
-          <Avatar name={m.user.name} image={m.user.image} size="lg" />
-          <div className="min-w-0">
-            <p className="text-[14px] font-semibold text-tva-ink truncate">{m.user.name}</p>
-            <p className="text-[12px] text-tva-ink-m truncate">{m.user.email}</p>
-            <span className="mt-1 inline-block text-[11px] font-semibold px-2 py-0.5 bg-tva-red-lt text-tva-red rounded-full capitalize">
-              {m.role.toLowerCase()}
-            </span>
+        <div key={m.id} className="bg-white border border-tva-border rounded-16 p-4 shadow-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <Avatar name={m.user.name} image={m.user.image} size="lg" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-semibold text-tva-ink truncate">{m.user.name}</p>
+              <p className="text-[12px] text-tva-ink-m truncate">{m.user.email}</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <select
+              value={m.role}
+              onChange={(e) => handleRoleChange(m.user.id, e.target.value)}
+              disabled={pending || m.user.id === ownerId}
+              className="text-[11px] font-semibold px-2 py-1 bg-tva-surface border border-tva-border rounded-8 capitalize disabled:opacity-50"
+            >
+              <option value="OWNER">Owner</option>
+              <option value="ADMIN">Admin</option>
+              <option value="MEMBER">Member</option>
+              <option value="VIEWER">Viewer</option>
+            </select>
+            {m.user.id !== ownerId && (
+              <button
+                onClick={() => handleRemoveMember(m.user.id, m.user.name || "this member")}
+                disabled={pending}
+                className="text-[11px] text-tva-error hover:text-tva-error disabled:opacity-50"
+              >
+                Remove
+              </button>
+            )}
           </div>
         </div>
       ))}
