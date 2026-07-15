@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
+import { ensureProjectMember } from "@/lib/actions/projects";
 import { z } from "zod";
 import type { ActionResult, TaskWithRelations } from "@/types";
 
@@ -16,6 +17,18 @@ const taskSchema = z.object({
   milestoneId: z.string().optional(),
   estimate:    z.coerce.number().optional(),
 });
+
+async function resolveAssignee(assigneeId: string | undefined, projectId: string): Promise<null | { assigneeId: string } | { error: string }> {
+  if (!assigneeId) return null;
+
+  const assignee = await prisma.user.findFirst({
+    where: { id: assigneeId, passwordHash: { not: null } },
+  });
+  if (!assignee) return { error: "Assignee not found in workspace" };
+
+  await ensureProjectMember(projectId, assigneeId);
+  return { assigneeId };
+}
 
 export async function getTasksForProject(projectId: string): Promise<TaskWithRelations[]> {
   const session = await auth();
@@ -85,6 +98,11 @@ export async function createTask(projectId: string, formData: FormData): Promise
 
   const parsed = taskSchema.safeParse(raw);
   if (!parsed.success) return { success: false, error: parsed.error.errors[0].message };
+
+  const assigneeResult = await resolveAssignee(parsed.data.assigneeId, projectId);
+  if (assigneeResult && "error" in assigneeResult) {
+    return { success: false, error: assigneeResult.error };
+  }
 
   const lastTask = await prisma.task.findFirst({
     where: { projectId },
@@ -158,6 +176,19 @@ export async function updateTask(taskId: string, formData: FormData): Promise<Ac
   const raw = Object.fromEntries(formData.entries());
   const parsed = taskSchema.partial().safeParse(raw);
   if (!parsed.success) return { success: false, error: parsed.error.errors[0].message };
+
+  const existingTask = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { projectId: true },
+  });
+  if (!existingTask) return { success: false, error: "Task not found" };
+
+  if (parsed.data.assigneeId) {
+    const assigneeResult = await resolveAssignee(parsed.data.assigneeId, existingTask.projectId);
+    if (assigneeResult && "error" in assigneeResult) {
+      return { success: false, error: assigneeResult.error };
+    }
+  }
 
   const task = await prisma.task.update({
     where: { id: taskId },

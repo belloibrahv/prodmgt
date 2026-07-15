@@ -163,18 +163,43 @@ export async function deleteProject(id: string): Promise<ActionResult> {
   return { success: true, data: null };
 }
 
+/** Add a user to a project if they are not already a member. */
+export async function ensureProjectMember(
+  projectId: string,
+  userId: string,
+  role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER" = "MEMBER",
+): Promise<void> {
+  const existing = await prisma.projectMember.findFirst({
+    where: { projectId, userId },
+  });
+  if (!existing) {
+    await prisma.projectMember.create({
+      data: { projectId, userId, role },
+    });
+  }
+}
+
 export async function addProjectMember(projectId: string, formData: FormData): Promise<ActionResult> {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  const currentUserId = session?.user?.id;
+  if (!currentUserId) return { success: false, error: "Not authenticated" };
 
+  const userId = formData.get("userId") as string;
   const email = formData.get("email") as string;
   const role = formData.get("role") as string;
 
-  if (!email || !role) return { success: false, error: "Email and role are required" };
+  if ((!userId && !email) || !role) {
+    return { success: false, error: "Member and role are required" };
+  }
 
-  // Check if user exists
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) return { success: false, error: "User with this email not found. Please ask them to sign up first." };
+  const user = userId
+    ? await prisma.user.findUnique({ where: { id: userId } })
+    : await prisma.user.findUnique({ where: { email } });
+
+  if (!user) return { success: false, error: "Team member not found in workspace" };
+  if (!user.passwordHash) {
+    return { success: false, error: "This user has not completed registration yet" };
+  }
 
   // Check if user is already a member
   const existingMember = await prisma.projectMember.findFirst({
@@ -189,7 +214,7 @@ export async function addProjectMember(projectId: string, formData: FormData): P
   });
   if (!project) return { success: false, error: "Project not found" };
 
-  const currentUserMember = project.members.find(m => m.userId === session.user.id);
+  const currentUserMember = project.members.find(m => m.userId === currentUserId);
   if (!currentUserMember || (currentUserMember.role !== "OWNER" && currentUserMember.role !== "ADMIN")) {
     return { success: false, error: "You don't have permission to add members" };
   }
@@ -209,7 +234,7 @@ export async function addProjectMember(projectId: string, formData: FormData): P
       entity: "project",
       entityId: projectId,
       detail: `as ${role.toLowerCase()}`,
-      userId: session.user.id,
+      userId: currentUserId,
       projectId,
     },
   });
@@ -221,7 +246,8 @@ export async function addProjectMember(projectId: string, formData: FormData): P
 
 export async function removeProjectMember(projectId: string, userId: string): Promise<ActionResult> {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  const currentUserId = session?.user?.id;
+  if (!currentUserId) return { success: false, error: "Not authenticated" };
 
   // Check permissions
   const project = await prisma.project.findFirst({
@@ -230,7 +256,7 @@ export async function removeProjectMember(projectId: string, userId: string): Pr
   });
   if (!project) return { success: false, error: "Project not found" };
 
-  const currentUserMember = project.members.find(m => m.userId === session.user.id);
+  const currentUserMember = project.members.find(m => m.userId === currentUserId);
   if (!currentUserMember || (currentUserMember.role !== "OWNER" && currentUserMember.role !== "ADMIN")) {
     return { success: false, error: "You don't have permission to remove members" };
   }
@@ -249,7 +275,8 @@ export async function removeProjectMember(projectId: string, userId: string): Pr
 
 export async function updateProjectMemberRole(projectId: string, userId: string, role: string): Promise<ActionResult> {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  const currentUserId = session?.user?.id;
+  if (!currentUserId) return { success: false, error: "Not authenticated" };
 
   // Check permissions
   const project = await prisma.project.findFirst({
@@ -258,7 +285,7 @@ export async function updateProjectMemberRole(projectId: string, userId: string,
   });
   if (!project) return { success: false, error: "Project not found" };
 
-  const currentUserMember = project.members.find(m => m.userId === session.user.id);
+  const currentUserMember = project.members.find(m => m.userId === currentUserId);
   if (!currentUserMember || currentUserMember.role !== "OWNER") {
     return { success: false, error: "Only project owners can change member roles" };
   }

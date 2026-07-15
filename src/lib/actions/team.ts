@@ -4,7 +4,27 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
 import { z } from "zod";
-import type { ActionResult } from "@/types";
+import type { ActionResult, WorkspaceMember } from "@/types";
+
+const workspaceMemberSelect = {
+  id: true,
+  name: true,
+  email: true,
+  image: true,
+  jobTitle: true,
+} as const;
+
+/** All registered users in the workspace (company roster). */
+export async function getWorkspaceMembers(): Promise<WorkspaceMember[]> {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  return prisma.user.findMany({
+    where: { passwordHash: { not: null } },
+    select: workspaceMemberSelect,
+    orderBy: [{ name: "asc" }, { email: "asc" }],
+  });
+}
 
 const inviteSchema = z.object({
   email: z.string().email(),

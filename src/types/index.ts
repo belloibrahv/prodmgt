@@ -11,6 +11,8 @@ export type { ProjectStatus, TaskStatus, Priority, MemberRole, DocType };
 
 export type UserSafe = Omit<User, "passwordHash">;
 
+export type WorkspaceMember = Pick<UserSafe, "id" | "name" | "email" | "image" | "jobTitle">;
+
 export type ProjectWithRelations = Project & {
   owner: UserSafe;
   members: (ProjectMember & { user: UserSafe })[];

@@ -40,7 +40,7 @@ export default function ActivityFeed({ activity }: { activity: ActivityWithRelat
                     <span className="font-semibold text-tva-ink">{item.user.name?.split(" ")[0]}</span>{" "}
                     <span className="text-tva-ink-m">{item.action}</span>
                     {item.detail && (
-                      <span className="font-medium text-tva-red bg-tva-red-xlt px-1.5 py-0.5 rounded-4 ml-1">"{item.detail}"</span>
+                      <span className="font-medium text-tva-red bg-tva-red-xlt px-1.5 py-0.5 rounded-4 ml-1">&quot;{item.detail}&quot;</span>
                     )}
                     {item.project && (
                       <span className="text-tva-ink-m"> in <span className="font-medium text-tva-ink">{item.project.name}</span></span>

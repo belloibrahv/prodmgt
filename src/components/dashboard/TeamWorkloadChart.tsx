@@ -55,7 +55,7 @@ export default function TeamWorkloadChart({ data }: TeamWorkloadChartProps) {
               borderRadius: "8px",
               fontSize: "12px",
             }}
-            formatter={(value: any) => [`${value} tasks`, "Assigned"]}
+            formatter={(value: unknown) => [`${typeof value === "number" ? value : 0} tasks`, "Assigned"]}
           />
           <Bar 
             dataKey="tasks" 

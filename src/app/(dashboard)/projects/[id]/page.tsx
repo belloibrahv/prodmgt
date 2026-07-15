@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getProjectById } from "@/lib/actions/projects";
+import { getWorkspaceMembers } from "@/lib/actions/team";
 import ProjectDetailClient from "@/components/projects/ProjectDetailClient";
 
 interface Props { params: Promise<{ id: string }> }
@@ -13,7 +14,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { id } = await params;
-  const project = await getProjectById(id);
+  const [project, workspaceMembers] = await Promise.all([
+    getProjectById(id),
+    getWorkspaceMembers(),
+  ]);
   if (!project) notFound();
-  return <ProjectDetailClient project={project} />;
+  return (
+    <ProjectDetailClient
+      project={project}
+      workspaceMembers={workspaceMembers}
+    />
+  );
 }

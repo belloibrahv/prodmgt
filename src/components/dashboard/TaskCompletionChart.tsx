@@ -55,7 +55,7 @@ export default function TaskCompletionChart({ data }: TaskCompletionChartProps) 
               fontSize: "12px",
             }}
             labelFormatter={(label) => `Date: ${label}`}
-            formatter={(value: any) => [`Completed: ${value}`, "Tasks"]}
+            formatter={(value: unknown) => [`Completed: ${typeof value === "number" ? value : 0}`, "Tasks"]}
           />
           <Line
             type="monotone"

@@ -8,14 +8,15 @@ import KanbanBoard from "./KanbanBoard";
 import TaskTable from "./TaskTable";
 import NewTaskModal from "./NewTaskModal";
 import { cn, KANBAN_COLUMNS } from "@/lib/utils";
-import type { TaskWithRelations, ProjectWithRelations } from "@/types";
+import type { TaskWithRelations, ProjectWithRelations, WorkspaceMember } from "@/types";
 
 interface Props {
   tasks: TaskWithRelations[];
   projects: ProjectWithRelations[];
+  workspaceMembers: WorkspaceMember[];
 }
 
-export default function TasksClient({ tasks, projects }: Props) {
+export default function TasksClient({ tasks, projects, workspaceMembers }: Props) {
   const [view, setView] = useState<"kanban" | "table">("kanban");
   const [projectFilter, setProjectFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
@@ -84,7 +85,7 @@ export default function TasksClient({ tasks, projects }: Props) {
         open={showModal}
         onClose={() => setShowModal(false)}
         projectId={modalProjectId}
-        members={selectedProject?.members.map(m => m.user)}
+        members={workspaceMembers}
         milestones={selectedProject?.milestones}
       />
     </>

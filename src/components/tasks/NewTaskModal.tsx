@@ -7,13 +7,14 @@ import { Modal } from "@/components/ui/Modal";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { createTask } from "@/lib/actions/tasks";
-import type { Milestone, User } from "@prisma/client";
+import type { Milestone } from "@prisma/client";
+import type { WorkspaceMember } from "@/types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   projectId: string;
-  members?: Omit<User, "passwordHash">[];
+  members?: WorkspaceMember[];
   milestones?: Milestone[];
   defaultStatus?: string;
 }

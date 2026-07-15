@@ -17,14 +17,15 @@ export default function InviteTeamMemberModal({ open, onClose }: Props) {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
 
     startTransition(async () => {
       const res = await inviteTeamMember(fd);
       if (res.success) {
         toast.success("Team member invited successfully!");
         onClose();
-        e.currentTarget.reset();
+        form.reset();
       } else {
         toast.error(res.error);
       }

@@ -20,12 +20,18 @@ import NewDocumentModal from "@/components/documents/NewDocumentModal";
 import InviteMemberModal from "./InviteMemberModal";
 import { deleteProject, removeProjectMember, updateProjectMemberRole } from "@/lib/actions/projects";
 import { cn } from "@/lib/utils";
-import type { ProjectWithRelations } from "@/types";
+import type { ProjectWithRelations, WorkspaceMember } from "@/types";
 
 const TABS = ["Overview", "Tasks", "Milestones", "Documents", "Members"] as const;
 type Tab = (typeof TABS)[number];
 
-export default function ProjectDetailClient({ project }: { project: ProjectWithRelations }) {
+export default function ProjectDetailClient({
+  project,
+  workspaceMembers,
+}: {
+  project: ProjectWithRelations;
+  workspaceMembers: WorkspaceMember[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [tab, setTab] = useState<Tab>("Overview");
@@ -160,7 +166,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
           )}
           {tab === "Members" && (
             <div className="ml-auto pb-1">
-              <Button size="sm" onClick={() => setShowInviteMember(true)}><Plus size={13} /> Invite Member</Button>
+              <Button size="sm" onClick={() => setShowInviteMember(true)}><Plus size={13} /> Add Member</Button>
             </div>
           )}
         </div>
@@ -170,7 +176,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
           {tab === "Overview" && <ProjectOverview project={project} pct={pct} />}
           {tab === "Tasks" && (
             taskView === "kanban"
-              ? <KanbanBoard tasks={project.tasks as never} projectId={project.id} members={project.members.map(m => m.user)} />
+              ? <KanbanBoard tasks={project.tasks as never} projectId={project.id} />
               : <TaskTable tasks={project.tasks as never} project={{ emoji: project.emoji, name: project.name }} />
           )}
           {tab === "Milestones" && <ProjectMilestones milestones={project.milestones} tasks={project.tasks} />}
@@ -183,7 +189,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
         open={showNewTask}
         onClose={() => setShowNewTask(false)}
         projectId={project.id}
-        members={project.members.map(m => m.user)}
+        members={workspaceMembers}
         milestones={project.milestones}
       />
 
@@ -204,6 +210,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
         open={showInviteMember}
         onClose={() => setShowInviteMember(false)}
         projectId={project.id}
+        workspaceMembers={workspaceMembers}
+        currentMemberIds={project.members.map(m => m.userId)}
       />
     </>
   );

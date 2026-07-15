@@ -6,6 +6,7 @@ export const metadata: Metadata = { title: "Team" };
 
 export default async function TeamPage() {
   const members = await prisma.user.findMany({
+    where: { passwordHash: { not: null } },
     select: {
       id: true, name: true, email: true, image: true, jobTitle: true, createdAt: true,
       memberships: {
