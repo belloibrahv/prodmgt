@@ -4,6 +4,7 @@ services:
     runtime: docker
     plan: starter
     healthCheckPath: /login
+    preDeployCommand: "node node_modules/prisma/build/index.js db push --skip-generate"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
