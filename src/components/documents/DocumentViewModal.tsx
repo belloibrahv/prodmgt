@@ -25,7 +25,7 @@ export default function DocumentViewModal({ doc, open, onClose }: Props) {
             </div>
           </div>
           <div>
-            <p className="text-[12px] font-semibold text-tva-ink">{doc.project.emoji} {doc.project.name}</p>
+            <p className="text-[12px] font-semibold text-tva-ink">{doc.project?.emoji} {doc.project?.name}</p>
             <p className="text-[11px] text-tva-ink-m">Project</p>
           </div>
           <div>

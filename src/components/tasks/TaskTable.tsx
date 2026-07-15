@@ -10,7 +10,13 @@ import type { TaskWithRelations } from "@/types";
 
 type SortKey = "title" | "status" | "priority" | "dueDate" | "assignee";
 
-export default function TaskTable({ tasks }: { tasks: TaskWithRelations[] }) {
+interface TaskTableProps {
+  tasks: TaskWithRelations[];
+  /** When rendering inside a project detail, pass the project to avoid requiring task.project relation */
+  project?: { emoji: string; name: string };
+}
+
+export default function TaskTable({ tasks, project: projectProp }: TaskTableProps) {
   const [selected, setSelected] = useState<TaskWithRelations | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "dueDate", dir: "asc" });
 
@@ -94,7 +100,7 @@ export default function TaskTable({ tasks }: { tasks: TaskWithRelations[] }) {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-[12px] text-tva-ink-m">
-                        {task.project.emoji} {task.project.name}
+                        {(projectProp ?? task.project)?.emoji} {(projectProp ?? task.project)?.name}
                       </span>
                     </td>
                   </tr>

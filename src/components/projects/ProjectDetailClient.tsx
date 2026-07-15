@@ -142,10 +142,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
           {tab === "Tasks" && (
             taskView === "kanban"
               ? <KanbanBoard tasks={project.tasks as never} projectId={project.id} members={project.members.map(m => m.user)} />
-              : <TaskTable tasks={project.tasks as never} />
+              : <TaskTable tasks={project.tasks as never} project={{ emoji: project.emoji, name: project.name }} />
           )}
           {tab === "Milestones" && <ProjectMilestones milestones={project.milestones} tasks={project.tasks} />}
-          {tab === "Documents" && <ProjectDocuments documents={project.documents as never} />}
+          {tab === "Documents" && <ProjectDocuments documents={project.documents} />}
           {tab === "Members" && <ProjectMembersTab members={project.members} />}
         </div>
       </div>

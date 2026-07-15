@@ -65,7 +65,13 @@ export async function getProjectById(id: string): Promise<ProjectWithRelations |
         orderBy: { position: "asc" },
       },
       milestones: { orderBy: { dueDate: "asc" } },
-      documents: { include: { author: { select: { id: true, name: true, email: true, image: true, jobTitle: true } } }, orderBy: { updatedAt: "desc" } },
+      documents: {
+        include: {
+          author: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
+          project: { select: { id: true, name: true, color: true, emoji: true } },
+        },
+        orderBy: { updatedAt: "desc" },
+      },
       _count: { select: { tasks: true, documents: true, members: true } },
     },
   }) as unknown as ProjectWithRelations | null;
