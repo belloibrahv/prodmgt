@@ -6,8 +6,20 @@ services:
     healthCheckPath: /login
     envVars:
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: techvaults-prodmgt-db
+          property: connectionString
       - key: NEXTAUTH_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
         sync: false
+
+databases:
+  - name: techvaults-prodmgt-db
+    plan: basic-256mb
+    databaseName: techvaults_prodmgt
+    user: techvaults
+    postgresMajorVersion: "17"
+    # Only Render services in the same region can connect. Use Render's pgAdmin
+    # admin app for production database administration over the private network.
+    ipAllowList: []
