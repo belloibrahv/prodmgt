@@ -7,6 +7,12 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/utils";
+import {
+  updateProfile,
+  updateNotificationPrefs,
+  changePassword,
+  updateAppearance,
+} from "@/lib/actions/settings";
 
 interface UserData {
   id: string;
@@ -14,6 +20,8 @@ interface UserData {
   email: string;
   image: string | null;
   jobTitle: string | null;
+  notificationPrefs?: Record<string, boolean>;
+  appearancePrefs?: Record<string, unknown>;
 }
 
 const SECTIONS = [
@@ -58,9 +66,9 @@ export default function SettingsClient({ user }: { user: UserData }) {
         {/* Content */}
         <div className="flex-1 min-w-0 animate-fade-in">
           {section === "profile"       && <ProfileSection user={user} />}
-          {section === "notifications" && <NotificationsSection />}
+          {section === "notifications" && <NotificationsSection user={user} />}
           {section === "security"      && <SecuritySection />}
-          {section === "appearance"    && <AppearanceSection />}
+          {section === "appearance"    && <AppearanceSection user={user} />}
           {section === "workspace"     && <WorkspaceSection />}
         </div>
       </div>
@@ -70,18 +78,24 @@ export default function SettingsClient({ user }: { user: UserData }) {
 
 /* ── Profile ─────────────────────────────────────────────── */
 function ProfileSection({ user }: { user: UserData }) {
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState({
     name: user.name ?? "",
     email: user.email,
     jobTitle: user.jobTitle ?? "",
   });
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
     startTransition(async () => {
-      // Server action would go here
-      toast.success("Profile updated!");
+      const res = await updateProfile(formData);
+      if (res.success) {
+        toast.success("Profile updated!");
+      } else {
+        toast.error(res.error);
+      }
     });
   }
 
@@ -104,11 +118,13 @@ function ProfileSection({ user }: { user: UserData }) {
         <form onSubmit={handleSave} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <Input
+              name="name"
               label="Full name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
             <Input
+              name="jobTitle"
               label="Job title"
               value={form.jobTitle}
               onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
@@ -119,10 +135,12 @@ function ProfileSection({ user }: { user: UserData }) {
             label="Email address"
             type="email"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            disabled
           />
           <div className="flex justify-end">
-            <Button type="submit">Save changes</Button>
+            <Button type="submit" loading={isPending}>
+              {isPending ? "Saving..." : "Save changes"}
+            </Button>
           </div>
         </form>
       </div>
@@ -131,16 +149,36 @@ function ProfileSection({ user }: { user: UserData }) {
 }
 
 /* ── Notifications ───────────────────────────────────────── */
-function NotificationsSection() {
+function NotificationsSection({ user }: { user: UserData }) {
+  const [isPending, startTransition] = useTransition();
+  
+  const validateBool = (value: unknown, fallback: boolean): boolean => {
+    return typeof value === "boolean" ? value : fallback;
+  };
+  
   const [prefs, setPrefs] = useState({
-    taskAssigned:    true,
-    taskDue:         true,
-    projectUpdates:  true,
-    teamMessages:    false,
-    weeklyDigest:    true,
-    emailNotifs:     true,
+    taskAssigned:    validateBool(user.notificationPrefs?.taskAssigned, true),
+    taskDue:         validateBool(user.notificationPrefs?.taskDue, true),
+    projectUpdates:  validateBool(user.notificationPrefs?.projectUpdates, true),
+    teamMessages:    validateBool(user.notificationPrefs?.teamMessages, false),
+    weeklyDigest:    validateBool(user.notificationPrefs?.weeklyDigest, true),
+    emailNotifs:     validateBool(user.notificationPrefs?.emailNotifs, true),
   });
   const toggle = (key: keyof typeof prefs) => setPrefs(p => ({ ...p, [key]: !p[key] }));
+
+  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    startTransition(async () => {
+      const res = await updateNotificationPrefs(formData);
+      if (res.success) {
+        toast.success("Notification preferences saved!");
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
 
   const rows = [
     { key: "taskAssigned"   as const, label: "Task assigned to you",    desc: "Get notified when a task is assigned" },
@@ -152,10 +190,10 @@ function NotificationsSection() {
   ];
 
   return (
-    <div className="bg-white border border-tva-border rounded-16 shadow-sm overflow-hidden">
+    <form onSubmit={handleSave} className="bg-white border border-tva-border rounded-16 shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-tva-border">
         <h2 className="text-[15px] font-semibold text-tva-ink">Notification Preferences</h2>
-        <p className="text-[12px] text-tva-ink-m mt-0.5">Choose what you&apos;d like to be notified about</p>
+        <p className="text-[12px] text-tva-ink-m mt-0.5">Choose what you would like to be notified about</p>
       </div>
       <div className="divide-y divide-tva-border/60">
         {rows.map(({ key, label, desc }) => (
@@ -164,31 +202,57 @@ function NotificationsSection() {
               <p className="text-[13px] font-medium text-tva-ink">{label}</p>
               <p className="text-[12px] text-tva-ink-m mt-0.5">{desc}</p>
             </div>
+            <input
+              type="hidden"
+              name={key}
+              value={prefs[key] ? "true" : ""}
+            />
             <Toggle checked={prefs[key]} onChange={() => toggle(key)} />
           </div>
         ))}
       </div>
       <div className="px-6 py-4 border-t border-tva-border flex justify-end">
-        <Button onClick={() => toast.success("Notification preferences saved!")}>Save preferences</Button>
+        <Button type="submit" loading={isPending}>
+          {isPending ? "Saving..." : "Save preferences"}
+        </Button>
       </div>
-    </div>
+    </form>
   );
 }
 
 /* ── Security ────────────────────────────────────────────── */
 function SecuritySection() {
+  const [isPending, startTransition] = useTransition();
+
+  async function handlePasswordChange(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    startTransition(async () => {
+      const res = await changePassword(formData);
+      if (res.success) {
+        toast.success("Password updated!");
+        e.currentTarget.reset();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-tva-border rounded-16 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-tva-border">
           <h2 className="text-[15px] font-semibold text-tva-ink">Change Password</h2>
         </div>
-        <form className="p-6 flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); toast.success("Password updated!"); }}>
-          <Input label="Current password" type="password" placeholder="••••••••" />
-          <Input label="New password" type="password" placeholder="Min. 8 characters" />
-          <Input label="Confirm new password" type="password" placeholder="••••••••" />
+        <form onSubmit={handlePasswordChange} className="p-6 flex flex-col gap-4">
+          <Input name="currentPassword" label="Current password" type="password" placeholder="••••••••" />
+          <Input name="newPassword" label="New password" type="password" placeholder="Min. 8 characters" />
+          <Input name="confirmPassword" label="Confirm new password" type="password" placeholder="••••••••" />
           <div className="flex justify-end">
-            <Button type="submit">Update password</Button>
+            <Button type="submit" loading={isPending}>
+              {isPending ? "Updating..." : "Update password"}
+            </Button>
           </div>
         </form>
       </div>
@@ -215,12 +279,45 @@ function SecuritySection() {
 }
 
 /* ── Appearance ──────────────────────────────────────────── */
-function AppearanceSection() {
-  const [accentColor, setAccentColor] = useState("#bc0004");
+function AppearanceSection({ user }: { user: UserData }) {
+  const [isPending, startTransition] = useTransition();
+  
+  const validateTheme = (value: unknown): "light" | "dark" | "system" => {
+    if (value === "light" || value === "dark" || value === "system") return value;
+    return "light";
+  };
+  
+  const validateAccentColor = (value: unknown): string => {
+    if (typeof value === "string" && value.startsWith("#")) return value;
+    return "#bc0004";
+  };
+  
+  const [theme, setTheme] = useState<"light" | "dark" | "system">(
+    validateTheme(user.appearancePrefs?.theme)
+  );
+  const [accentColor, setAccentColor] = useState<string>(
+    validateAccentColor(user.appearancePrefs?.accentColor)
+  );
   const colors = ["#bc0004", "#2563eb", "#1da851", "#8b5cf6", "#f59e0b", "#ec4899"];
 
+  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.set("theme", theme);
+    formData.set("accentColor", accentColor);
+    
+    startTransition(async () => {
+      const res = await updateAppearance(formData);
+      if (res.success) {
+        toast.success("Appearance saved!");
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
   return (
-    <div className="bg-white border border-tva-border rounded-16 shadow-sm overflow-hidden">
+    <form onSubmit={handleSave} className="bg-white border border-tva-border rounded-16 shadow-sm overflow-hidden">
       <div className="px-6 py-4 border-b border-tva-border">
         <h2 className="text-[15px] font-semibold text-tva-ink">Appearance</h2>
         <p className="text-[12px] text-tva-ink-m mt-0.5">Customise the look of your workspace</p>
@@ -230,14 +327,15 @@ function AppearanceSection() {
         <div>
           <p className="text-[13px] font-semibold text-tva-ink mb-3">Theme</p>
           <div className="flex gap-3">
-            {[{ id: "light", label: "Light" }, { id: "dark", label: "Dark" }, { id: "system", label: "System" }].map(({ id, label }) => (
+            {[{ id: "light" as const, label: "Light" }, { id: "dark" as const, label: "Dark" }, { id: "system" as const, label: "System" }].map(({ id, label }) => (
               <button
                 key={id}
+                type="button"
                 className={cn(
                   "flex-1 py-3 rounded-12 border text-[13px] font-medium transition-all",
-                  id === "light" ? "border-tva-red bg-tva-red-lt text-tva-red" : "border-tva-border text-tva-ink-m hover:border-tva-red hover:text-tva-red",
+                  theme === id ? "border-tva-red bg-tva-red-lt text-tva-red" : "border-tva-border text-tva-ink-m hover:border-tva-red hover:text-tva-red",
                 )}
-                onClick={() => toast(`${label} theme — coming soon`)}
+                onClick={() => setTheme(id)}
               >
                 {id === "light" ? "☀️" : id === "dark" ? "🌙" : "💻"} {label}
               </button>
@@ -252,6 +350,7 @@ function AppearanceSection() {
             {colors.map((c) => (
               <button
                 key={c}
+                type="button"
                 onClick={() => setAccentColor(c)}
                 style={{ backgroundColor: c }}
                 className={cn(
@@ -265,10 +364,12 @@ function AppearanceSection() {
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={() => toast.success("Appearance saved!")}>Save</Button>
+          <Button type="submit" loading={isPending}>
+            {isPending ? "Saving..." : "Save"}
+          </Button>
         </div>
       </div>
-    </div>
+    </form>
   );
 }
 
