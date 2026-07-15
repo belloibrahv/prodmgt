@@ -6,20 +6,25 @@ import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { createProject } from "@/lib/actions/projects";
+import { updateProject } from "@/lib/actions/projects";
+import type { ProjectWithRelations } from "@/types";
 
 const EMOJIS = [
   "📁", "🚀", "💡", "🏢", "📱", "🛒", "📊", "🎯", "⚙️", "🔬", "🎨", "📝",
 ];
 const COLORS = ["#bc0004","#2563eb","#1da851","#f59e0b","#8b5cf6","#ec4899","#0891b2","#d97706"];
 
-interface Props { open: boolean; onClose: () => void }
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  project: ProjectWithRelations;
+}
 
-export default function NewProjectModal({ open, onClose }: Props) {
+export default function EditProjectModal({ open, onClose, project }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [emoji, setEmoji] = useState("📁");
-  const [color, setColor] = useState("#bc0004");
+  const [emoji, setEmoji] = useState(project.emoji || "📁");
+  const [color, setColor] = useState(project.color);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,11 +33,11 @@ export default function NewProjectModal({ open, onClose }: Props) {
     fd.set("color", color);
 
     startTransition(async () => {
-      const res = await createProject(fd);
+      const res = await updateProject(project.id, fd);
       if (res.success) {
-        toast.success("Project created!");
+        toast.success("Project updated!");
         onClose();
-        router.push(`/projects/${res.data.id}`);
+        router.refresh();
       } else {
         toast.error(res.error);
       }
@@ -43,16 +48,15 @@ export default function NewProjectModal({ open, onClose }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Create New Project"
+      title="Edit Project"
       footer={
         <>
           <Button variant="outline" onClick={onClose} type="button">Cancel</Button>
-          <Button type="submit" form="new-project-form" loading={pending}>Create Project</Button>
+          <Button type="submit" form="edit-project-form" loading={pending}>Save Changes</Button>
         </>
       }
     >
-      <form id="new-project-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Emoji + Color */}
+      <form id="edit-project-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-tva-ink-m">Icon</label>
@@ -82,16 +86,18 @@ export default function NewProjectModal({ open, onClose }: Props) {
           </div>
         </div>
 
-        <Input name="name" label="Project name" placeholder="e.g. Client Portal v2" required />
-        <Textarea name="description" label="Description" placeholder="What is this project about?" />
+        <Input name="name" label="Project name" placeholder="e.g. Client Portal v2" required defaultValue={project.name} />
+        <Textarea name="description" label="Description" placeholder="What is this project about?" defaultValue={project.description ?? ""} />
 
         <div className="grid grid-cols-2 gap-3">
-          <Select name="status" label="Status" options={[
+          <Select name="status" label="Status" defaultValue={project.status} options={[
             { value: "PLANNING", label: "Planning" },
             { value: "ACTIVE", label: "Active" },
             { value: "ON_HOLD", label: "On Hold" },
+            { value: "COMPLETED", label: "Completed" },
+            { value: "CANCELLED", label: "Cancelled" },
           ]} />
-          <Select name="priority" label="Priority" options={[
+          <Select name="priority" label="Priority" defaultValue={project.priority} options={[
             { value: "LOW", label: "Low" },
             { value: "MEDIUM", label: "Medium" },
             { value: "HIGH", label: "High" },
@@ -100,8 +106,8 @@ export default function NewProjectModal({ open, onClose }: Props) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Input name="startDate" label="Start date" type="date" />
-          <Input name="dueDate" label="Due date" type="date" />
+          <Input name="startDate" label="Start date" type="date" defaultValue={project.startDate ? new Date(project.startDate).toISOString().split("T")[0] : ""} />
+          <Input name="dueDate" label="Due date" type="date" defaultValue={project.dueDate ? new Date(project.dueDate).toISOString().split("T")[0] : ""} />
         </div>
       </form>
     </Modal>

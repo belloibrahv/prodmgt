@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, MessageSquare } from "lucide-react";
+import { MdCalendarToday, MdChatBubbleOutline } from "react-icons/md";
+import { motion } from "framer-motion";
 import { PriorityBadge } from "@/components/ui/StatusBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { getDueLabel, cn } from "@/lib/utils";
@@ -13,29 +14,33 @@ export default function TaskCard({ task }: { task: TaskWithRelations }) {
   const due = getDueLabel(task.dueDate);
 
   const dueClass: Record<string, string> = {
-    overdue: "text-tva-error",
-    today:   "text-tva-warn",
-    tomorrow:"text-tva-info",
-    upcoming:"text-tva-ink-m",
-    none:    "text-tva-ink-m",
+    overdue: "text-tva-error bg-tva-error-lt",
+    today:   "text-tva-warn bg-tva-warn-lt",
+    tomorrow:"text-tva-info bg-tva-info-lt",
+    upcoming:"text-tva-ink-m bg-tva-surface",
+    none:    "text-tva-ink-m bg-tva-surface",
   };
 
   return (
     <>
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -2, boxShadow: "0 8px 16px -4px rgba(0,0,0,0.1)" }}
         onClick={() => setShowDetail(true)}
-        className="bg-white border border-tva-border rounded-12 p-3.5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer group"
+        className="bg-white border border-tva-border/60 rounded-16 p-4 shadow-sm hover:border-tva-red/40 transition-all cursor-pointer group"
       >
         {/* Project tag */}
         {task.project && (
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: task.project.color }} />
-            <span className="text-[11px] font-medium text-tva-ink-m">{task.project.emoji} {task.project.name}</span>
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: task.project.color }} />
+            <span className="text-xs text-tva-ink-m">{task.project.emoji}</span>
+            <span className="text-xs font-medium text-tva-ink-m">{task.project.name}</span>
           </div>
         )}
 
         {/* Title */}
-        <p className="text-[13px] font-semibold text-tva-ink group-hover:text-tva-red transition-colors line-clamp-2">
+        <p className="text-sm font-semibold text-tva-ink group-hover:text-tva-red transition-colors line-clamp-2 leading-relaxed">
           {task.title}
         </p>
 
@@ -44,15 +49,15 @@ export default function TaskCard({ task }: { task: TaskWithRelations }) {
           <div className="flex items-center gap-2">
             <PriorityBadge priority={task.priority} />
             {task.comments.length > 0 && (
-              <span className="flex items-center gap-1 text-[11px] text-tva-ink-m">
-                <MessageSquare size={11} /> {task.comments.length}
+              <span className="flex items-center gap-1 text-xs text-tva-ink-m font-medium">
+                <MdChatBubbleOutline size={12} /> {task.comments.length}
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
             {task.dueDate && (
-              <span className={cn("flex items-center gap-1 text-[11px] font-medium", dueClass[due.variant])}>
-                <Calendar size={11} />
+              <span className={cn("flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-8", dueClass[due.variant])}>
+                <MdCalendarToday size={11} />
                 {due.label.replace("Overdue · ", "")}
               </span>
             )}
@@ -61,7 +66,7 @@ export default function TaskCard({ task }: { task: TaskWithRelations }) {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       <TaskDetailModal task={task} open={showDetail} onClose={() => setShowDetail(false)} />
     </>

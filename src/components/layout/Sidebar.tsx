@@ -26,12 +26,12 @@ export default function Sidebar() {
 
   return (
     <aside className={cn(
-      "flex flex-col bg-white border-r border-tva-border transition-all duration-200 flex-shrink-0 z-40",
-      collapsed ? "w-16" : "w-60",
+      "flex flex-col bg-white border-r border-tva-border/60 transition-all duration-300 flex-shrink-0 z-40",
+      collapsed ? "w-16" : "w-64",
     )}>
       {/* Header */}
       <div className={cn(
-        "flex items-center border-b border-tva-border h-16 px-4 flex-shrink-0",
+        "flex items-center border-b border-tva-border/40 h-16 px-4 flex-shrink-0",
         collapsed ? "justify-center" : "justify-between",
       )}>
         {!collapsed && (
@@ -47,7 +47,7 @@ export default function Sidebar() {
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "p-1.5 rounded-8 text-tva-ink-m hover:bg-tva-surface hover:text-tva-red transition-colors flex-shrink-0",
+            "p-2 rounded-12 text-tva-ink-m hover:bg-tva-red-xlt hover:text-tva-red transition-all duration-200 flex-shrink-0",
             collapsed && "rotate-180",
           )}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -57,7 +57,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
@@ -66,17 +66,14 @@ export default function Sidebar() {
               href={href}
               title={collapsed ? label : undefined}
               className={cn(
-                "flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium relative transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium relative transition-all duration-200 rounded-12",
                 "hover:bg-tva-red-xlt hover:text-tva-red",
                 active
-                  ? "bg-tva-red-xlt text-tva-red font-semibold"
+                  ? "bg-tva-red text-white shadow-sm"
                   : "text-tva-ink-m",
-                collapsed && "justify-center px-0",
+                collapsed && "justify-center px-0 w-10 mx-auto",
               )}
             >
-              {active && (
-                <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-tva-red rounded-r-full" />
-              )}
               <Icon size={18} className="flex-shrink-0" />
               {!collapsed && <span>{label}</span>}
             </Link>
@@ -85,15 +82,15 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-tva-border py-2">
+      <div className="border-t border-tva-border/40 py-3 px-2">
         <Link
           href="/settings"
           title={collapsed ? "Settings" : undefined}
           className={cn(
-            "flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-tva-ink-m",
-            "hover:bg-tva-red-xlt hover:text-tva-red transition-colors",
-            pathname === "/settings" && "bg-tva-red-xlt text-tva-red font-semibold",
-            collapsed && "justify-center px-0",
+            "flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium rounded-12 transition-all duration-200",
+            "hover:bg-tva-red-xlt hover:text-tva-red",
+            pathname === "/settings" ? "bg-tva-red text-white shadow-sm" : "text-tva-ink-m",
+            collapsed && "justify-center px-0 w-10 mx-auto",
           )}
         >
           <Settings size={18} className="flex-shrink-0" />

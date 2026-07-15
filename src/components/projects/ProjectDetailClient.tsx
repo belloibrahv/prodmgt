@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, Edit3, Trash2, Plus } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge, PriorityBadge } from "@/components/ui/StatusBadge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -13,6 +15,9 @@ import TaskTable from "@/components/tasks/TaskTable";
 import ProjectDocuments from "@/components/documents/ProjectDocuments";
 import ProjectMilestones from "./ProjectMilestones";
 import NewTaskModal from "@/components/tasks/NewTaskModal";
+import EditProjectModal from "./EditProjectModal";
+import NewDocumentModal from "@/components/documents/NewDocumentModal";
+import { deleteProject } from "@/lib/actions/projects";
 import { cn } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
 
@@ -20,10 +25,27 @@ const TABS = ["Overview", "Tasks", "Milestones", "Documents", "Members"] as cons
 type Tab = (typeof TABS)[number];
 
 export default function ProjectDetailClient({ project }: { project: ProjectWithRelations }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [tab, setTab] = useState<Tab>("Overview");
   const [taskView, setTaskView] = useState<"kanban" | "table">("kanban");
   const [showNewTask, setShowNewTask] = useState(false);
+  const [showEditProject, setShowEditProject] = useState(false);
+  const [showNewDoc, setShowNewDoc] = useState(false);
   const pct = getProgressPercent(project.tasks);
+
+  function handleDelete() {
+    if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) return;
+    startTransition(async () => {
+      const res = await deleteProject(project.id);
+      if (res.success) {
+        toast.success("Project deleted");
+        router.push("/projects");
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
 
   return (
     <>
@@ -41,8 +63,8 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
           <div className="p-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-16 bg-tva-surface flex items-center justify-center text-3xl flex-shrink-0">
-                  {project.emoji}
+                <div className="w-14 h-14 rounded-16 bg-tva-surface flex items-center justify-center flex-shrink-0">
+                  <span className="text-3xl">{project.emoji}</span>
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-tva-ink">{project.name}</h1>
@@ -56,10 +78,10 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => setShowEditProject(true)}>
                   <Edit3 size={13} /> Edit
                 </Button>
-                <Button variant="icon" size="sm" className="text-tva-error hover:bg-tva-error-lt">
+                <Button variant="destructive" size="sm" onClick={handleDelete} disabled={pending}>
                   <Trash2 size={14} />
                 </Button>
               </div>
@@ -131,7 +153,7 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
           )}
           {tab === "Documents" && (
             <div className="ml-auto pb-1">
-              <Button size="sm"><Plus size={13} /> Add Doc</Button>
+              <Button size="sm" onClick={() => setShowNewDoc(true)}><Plus size={13} /> Add Doc</Button>
             </div>
           )}
         </div>
@@ -156,6 +178,19 @@ export default function ProjectDetailClient({ project }: { project: ProjectWithR
         projectId={project.id}
         members={project.members.map(m => m.user)}
         milestones={project.milestones}
+      />
+
+      <EditProjectModal
+        open={showEditProject}
+        onClose={() => setShowEditProject(false)}
+        project={project}
+      />
+
+      <NewDocumentModal
+        open={showNewDoc}
+        onClose={() => setShowNewDoc(false)}
+        projectId={project.id}
+        projectName={project.name}
       />
     </>
   );

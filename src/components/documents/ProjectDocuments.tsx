@@ -54,7 +54,7 @@ export default function ProjectDocuments({ documents }: { documents: DocumentWit
                   <Icon size={18} />
                 </div>
                 <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${colorClass}`}>
-                  {doc.type.replace("_", " ")}
+                  {doc.type.replaceAll("_", " ")}
                 </span>
               </div>
               <div>

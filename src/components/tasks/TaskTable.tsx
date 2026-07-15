@@ -99,7 +99,7 @@ export default function TaskTable({ tasks, project: projectProp }: TaskTableProp
                       {formatDate(task.dueDate)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-[12px] text-tva-ink-m">
+                      <span className="text-[12px] text-tva-ink-m flex items-center gap-1">
                         {(projectProp ?? task.project)?.emoji} {(projectProp ?? task.project)?.name}
                       </span>
                     </td>

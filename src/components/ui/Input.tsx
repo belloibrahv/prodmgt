@@ -14,13 +14,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-xs font-semibold text-tva-ink-m">
+          <label htmlFor={inputId} className="text-xs font-semibold text-tva-ink tracking-wide">
             {label}
           </label>
         )}
         <div className="relative">
           {leftIcon && (
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-tva-ink-m">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-tva-ink-m pointer-events-none">
               {leftIcon}
             </span>
           )}
@@ -28,11 +28,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={cn(
-              "w-full bg-tva-surface border border-tva-border rounded-8 px-3.5 py-2.5 text-[13px] text-tva-ink",
-              "placeholder:text-tva-ink-m outline-none transition-colors duration-150",
-              "focus:border-tva-red focus:bg-white",
-              error && "border-tva-error",
-              leftIcon && "pl-9",
+              "w-full bg-white border border-tva-border rounded-12 px-4 py-3 text-[14px] text-tva-ink",
+              "placeholder:text-tva-ink-m outline-none transition-all duration-200",
+              "focus:border-tva-red focus:ring-2 focus:ring-tva-red/10 focus:bg-white",
+              "hover:border-tva-ink-m/30",
+              error && "border-tva-error focus:ring-tva-error/10 focus:border-tva-error",
+              leftIcon && "pl-10",
               className,
             )}
             {...props}
@@ -58,7 +59,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-xs font-semibold text-tva-ink-m">
+          <label htmlFor={inputId} className="text-xs font-semibold text-tva-ink tracking-wide">
             {label}
           </label>
         )}
@@ -66,11 +67,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full bg-tva-surface border border-tva-border rounded-8 px-3.5 py-2.5 text-[13px] text-tva-ink",
-            "outline-none transition-colors duration-150 cursor-pointer appearance-none",
-            "focus:border-tva-red focus:bg-white",
-            "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b4f4f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")] bg-no-repeat bg-[right_12px_center] pr-9",
-            error && "border-tva-error",
+            "w-full bg-white border border-tva-border rounded-12 px-4 py-3 text-[14px] text-tva-ink",
+            "outline-none transition-all duration-200 cursor-pointer appearance-none",
+            "focus:border-tva-red focus:ring-2 focus:ring-tva-red/10 focus:bg-white",
+            "hover:border-tva-ink-m/30",
+            "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b4f4f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")] bg-no-repeat bg-[right_14px_center] pr-10",
+            error && "border-tva-error focus:ring-tva-error/10 focus:border-tva-error",
             className,
           )}
           {...props}
@@ -98,7 +100,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-xs font-semibold text-tva-ink-m">
+          <label htmlFor={inputId} className="text-xs font-semibold text-tva-ink tracking-wide">
             {label}
           </label>
         )}
@@ -106,10 +108,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full bg-tva-surface border border-tva-border rounded-8 px-3.5 py-2.5 text-[13px] text-tva-ink",
-            "placeholder:text-tva-ink-m outline-none transition-colors duration-150 resize-y min-h-[80px]",
-            "focus:border-tva-red focus:bg-white",
-            error && "border-tva-error",
+            "w-full bg-white border border-tva-border rounded-12 px-4 py-3 text-[14px] text-tva-ink",
+            "placeholder:text-tva-ink-m outline-none transition-all duration-200 resize-y min-h-[100px]",
+            "focus:border-tva-red focus:ring-2 focus:ring-tva-red/10 focus:bg-white",
+            "hover:border-tva-ink-m/30",
+            error && "border-tva-error focus:ring-tva-error/10 focus:border-tva-error",
             className,
           )}
           {...props}

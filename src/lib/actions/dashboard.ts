@@ -46,3 +46,85 @@ export async function getRecentActivity(limit = 10): Promise<ActivityWithRelatio
     take: limit,
   }) as unknown as ActivityWithRelations[];
 }
+
+export async function getProjectStatusDistribution() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const projects = await prisma.project.findMany({
+    where: {
+      OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }],
+    },
+    select: { status: true },
+  });
+
+  const distribution = projects.reduce((acc, project) => {
+    acc[project.status] = (acc[project.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return Object.entries(distribution).map(([status, count]) => ({
+    name: status.toLowerCase(),
+    value: count,
+  }));
+}
+
+export async function getTaskCompletionTrend() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const tasks = await prisma.task.findMany({
+    where: {
+      project: {
+        OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }],
+      },
+      status: TaskStatus.DONE,
+    },
+    select: { updatedAt: true },
+    orderBy: { updatedAt: "asc" },
+  });
+
+  const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (29 - i));
+    return date.toISOString().split('T')[0];
+  });
+
+  const completionByDate = tasks.reduce((acc, task) => {
+    const date = task.updatedAt.toISOString().split('T')[0];
+    acc[date] = (acc[date] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  return last30Days.map(date => ({
+    date,
+    completed: completionByDate[date] || 0,
+  }));
+}
+
+export async function getTeamWorkloadData() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const users = await prisma.user.findMany({
+    select: { id: true, name: true },
+  });
+
+  const workload = await Promise.all(
+    users.map(async (user) => {
+      const assignedTasks = await prisma.task.count({
+        where: {
+          assigneeId: user.id,
+          status: { notIn: [TaskStatus.DONE, TaskStatus.BLOCKED] },
+        },
+      });
+
+      return {
+        name: user.name || 'Unknown',
+        tasks: assignedTasks,
+      };
+    })
+  );
+
+  return workload.filter(w => w.tasks > 0);
+}

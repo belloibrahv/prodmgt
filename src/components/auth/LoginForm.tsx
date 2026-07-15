@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -43,18 +44,35 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Input
-        label="Email address"
-        type="email"
-        placeholder="you@techvaults.com"
-        value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
-        error={errors.email}
-        leftIcon={<Mail size={14} />}
-        autoComplete="email"
-      />
-      <div className="relative">
+    <motion.form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <Input
+          label="Email address"
+          type="email"
+          placeholder="you@techvaults.com"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          error={errors.email}
+          leftIcon={<Mail size={14} />}
+          autoComplete="email"
+        />
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="relative"
+      >
         <Input
           label="Password"
           type={showPw ? "text" : "password"}
@@ -65,30 +83,38 @@ export default function LoginForm() {
           leftIcon={<Lock size={14} />}
           autoComplete="current-password"
         />
-        <button
+        <motion.button
           type="button"
           onClick={() => setShowPw(!showPw)}
           className="absolute right-3 top-8 text-tva-ink-m hover:text-tva-ink transition-colors"
           aria-label={showPw ? "Hide password" : "Show password"}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
         >
           {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
-      <div className="flex justify-end">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className="flex justify-end"
+      >
         <button type="button" className="text-xs text-tva-red hover:underline font-medium">
           Forgot password?
         </button>
-      </div>
+      </motion.div>
 
-      <Button type="submit" loading={loading} className="w-full justify-center py-2.5 mt-1">
-        Sign in
-      </Button>
-
-      {/* Dev hint */}
-      <p className="text-center text-[11px] text-tva-ink-m bg-tva-surface rounded-8 px-3 py-2">
-        Demo: <strong>kudirat@techvaults.com</strong> / <strong>password123</strong>
-      </p>
-    </form>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+      >
+        <Button type="submit" loading={loading} className="w-full justify-center py-2.5 mt-1">
+          Sign in
+        </Button>
+      </motion.div>
+    </motion.form>
   );
 }

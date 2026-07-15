@@ -298,7 +298,7 @@ function WorkspaceSection() {
             <p className="text-[13px] font-medium text-tva-ink">Delete workspace</p>
             <p className="text-[12px] text-tva-ink-m mt-0.5">This action is irreversible. All data will be permanently deleted.</p>
           </div>
-          <Button variant="danger" size="sm" onClick={() => toast.error("Contact your admin to delete the workspace")}>
+          <Button variant="destructive" size="sm" onClick={() => toast.error("Contact your admin to delete the workspace")}>
             Delete workspace
           </Button>
         </div>

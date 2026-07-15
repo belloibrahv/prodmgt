@@ -112,7 +112,7 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
               placeholder="Add a comment…"
               className="flex-1 bg-tva-surface border border-tva-border rounded-full px-4 py-2.5 text-[13px] text-tva-ink placeholder:text-tva-ink-m outline-none focus:border-tva-red transition-colors"
             />
-            <Button type="submit" loading={pending} size="sm" variant="icon" className="rounded-full p-2.5 bg-tva-red text-white hover:bg-tva-red-dk">
+            <Button type="submit" loading={pending} size="sm" variant="default" className="rounded-full p-2.5 bg-tva-red text-white hover:bg-tva-red-dk">
               <Send size={14} />
             </Button>
           </form>

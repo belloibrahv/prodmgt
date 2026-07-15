@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarRange } from "lucide-react";
+import { MdDateRange } from "react-icons/md";
 import { differenceInDays, format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isWeekend } from "date-fns";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -12,13 +12,13 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
 
   if (active.length === 0) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-tva-ink">Timeline</h1>
-          <p className="text-sm text-tva-ink-m mt-0.5">Project schedules and milestones</p>
+          <h1 className="text-2xl font-bold text-tva-ink">Timeline</h1>
+          <p className="text-sm text-tva-ink-m mt-1">Project schedules and milestones</p>
         </div>
         <EmptyState
-          icon={<CalendarRange size={48} />}
+          icon={<MdDateRange size={48} />}
           title="No active projects with dates"
           description="Set start and due dates on your projects to see them on the timeline."
         />
@@ -55,29 +55,29 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
   const days = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-tva-ink">Timeline</h1>
-        <p className="text-sm text-tva-ink-m mt-0.5">
+        <h1 className="text-2xl font-bold text-tva-ink">Timeline</h1>
+        <p className="text-sm text-tva-ink-m mt-1">
           {active.length} active project{active.length !== 1 ? "s" : ""} scheduled
         </p>
       </div>
 
-      <div className="bg-white border border-tva-border rounded-16 shadow-sm overflow-hidden">
+      <div className="bg-white border border-tva-border/60 rounded-20 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <div style={{ minWidth: totalDays * dayWidth + 220 }}>
 
             {/* Month header row */}
-            <div className="flex border-b border-tva-border">
+            <div className="flex border-b border-tva-border/40">
               {/* Project label column */}
-              <div className="w-52 min-w-[208px] flex-shrink-0 bg-tva-surface border-r border-tva-border" />
+              <div className="w-52 min-w-[208px] flex-shrink-0 bg-tva-surface/50 border-r border-tva-border/40" />
               <div className="flex">
                 {months.map((m, i) => (
                   <div
                     key={i}
                     style={{ width: m.days * dayWidth }}
-                    className="px-2 py-2.5 text-[12px] font-semibold text-tva-ink-m border-r border-tva-border/40 bg-tva-surface"
+                    className="px-3 py-3 text-xs font-semibold text-tva-ink border-r border-tva-border/30 bg-tva-surface/50"
                   >
                     {m.label}
                   </div>
@@ -86,16 +86,16 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
             </div>
 
             {/* Day header row */}
-            <div className="flex border-b border-tva-border">
-              <div className="w-52 min-w-[208px] flex-shrink-0 border-r border-tva-border bg-tva-surface" />
+            <div className="flex border-b border-tva-border/40">
+              <div className="w-52 min-w-[208px] flex-shrink-0 border-r border-tva-border/40 bg-tva-surface/50" />
               <div className="flex">
                 {days.map((day, i) => (
                   <div
                     key={i}
                     style={{ width: dayWidth }}
                     className={cn(
-                      "flex flex-col items-center justify-center py-1.5 border-r border-tva-border/20 text-[10px] font-medium select-none",
-                      isWeekend(day) && "bg-tva-surface",
+                      "flex flex-col items-center justify-center py-2 border-r border-tva-border/20 text-[10px] font-medium select-none",
+                      isWeekend(day) && "bg-tva-surface/30",
                       isToday(day) && "bg-tva-red-lt font-bold text-tva-red",
                       !isWeekend(day) && !isToday(day) && "text-tva-ink-m",
                     )}
@@ -118,12 +118,14 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
               ));
 
               return (
-                <div key={project.id} className="flex items-center border-b border-tva-border/60 hover:bg-tva-red-xlt/40 transition-colors group">
+                <div key={project.id} className="flex items-center border-b border-tva-border/40 hover:bg-tva-red-xlt/50 transition-colors group">
                   {/* Label */}
-                  <div className="w-52 min-w-[208px] flex-shrink-0 px-4 py-3 border-r border-tva-border flex items-center gap-2">
-                    <span className="text-lg flex-shrink-0">{project.emoji}</span>
+                  <div className="w-52 min-w-[208px] flex-shrink-0 px-4 py-4 border-r border-tva-border/40 flex items-center gap-2">
+                    <div className="flex-shrink-0">
+                      <span className="text-xl">{project.emoji}</span>
+                    </div>
                     <div className="min-w-0">
-                      <p className="text-[13px] font-semibold text-tva-ink truncate group-hover:text-tva-red transition-colors">
+                      <p className="text-sm font-semibold text-tva-ink truncate group-hover:text-tva-red transition-colors">
                         {project.name}
                       </p>
                       <StatusBadge status={project.status} />
@@ -131,7 +133,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
                   </div>
 
                   {/* Bar track */}
-                  <div className="relative flex-1" style={{ height: 52 }}>
+                  <div className="relative flex-1" style={{ height: 56 }}>
                     {/* Today line */}
                     {(() => {
                       const todayOffset = differenceInDays(new Date(), rangeStart);
@@ -148,11 +150,11 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
 
                     {/* Project bar */}
                     <div
-                      className="absolute top-3 rounded-8 flex items-center overflow-hidden"
+                      className="absolute top-3.5 rounded-12 flex items-center overflow-hidden shadow-sm"
                       style={{
                         left:   offsetDays * dayWidth + 4,
                         width:  Math.max(spanDays * dayWidth - 8, 0),
-                        height: 28,
+                        height: 32,
                         backgroundColor: project.color,
                       }}
                     >
@@ -161,7 +163,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
                         className="absolute left-0 top-0 bottom-0 opacity-30 bg-white"
                         style={{ width: `${pct}%` }}
                       />
-                      <span className="relative z-10 px-2 text-[11px] font-semibold text-white truncate whitespace-nowrap">
+                      <span className="relative z-10 px-2.5 text-xs font-semibold text-white truncate whitespace-nowrap">
                         {project.name} · {pct}%
                       </span>
                     </div>
@@ -175,7 +177,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
                           key={ms.id}
                           title={`${ms.name} · ${formatDate(ms.dueDate)}`}
                           className="absolute z-20 cursor-pointer"
-                          style={{ left: msOffset * dayWidth + dayWidth / 2 - 6, top: 10 }}
+                          style={{ left: msOffset * dayWidth + dayWidth / 2 - 6, top: 12 }}
                         >
                           <div className={cn(
                             "w-3 h-3 rotate-45 border-2",
@@ -192,14 +194,14 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
         </div>
 
         {/* Legend */}
-        <div className="px-5 py-3 border-t border-tva-border flex items-center gap-5 text-[12px] text-tva-ink-m bg-tva-surface/50">
-          <span className="flex items-center gap-1.5">
+        <div className="px-6 py-4 border-t border-tva-border/40 flex items-center gap-6 text-xs text-tva-ink-m bg-tva-surface/50">
+          <span className="flex items-center gap-2">
             <span className="w-px h-4 bg-tva-red inline-block" /> Today
           </span>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-2">
             <span className="w-3 h-3 rotate-45 border-2 border-tva-warn bg-white inline-block" /> Milestone
           </span>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-2">
             <span className="w-3 h-3 rotate-45 border-2 border-tva-success bg-tva-success inline-block" /> Completed milestone
           </span>
         </div>
