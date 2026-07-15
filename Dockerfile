@@ -9,6 +9,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 FROM dependencies AS builder
+# Install OpenSSL 3 so Prisma can generate the correct engine binary
+RUN apk add --no-cache openssl
 COPY . .
 RUN npx prisma generate
 RUN npm run build
@@ -18,16 +20,24 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs \
+# OpenSSL 3 is required by the Prisma query engine on Alpine
+RUN apk add --no-cache openssl \
+  && addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+
+# Copy Prisma engine + client
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+
+# Create the .bin symlink so `node_modules/.bin/prisma` resolves correctly
+RUN mkdir -p node_modules/.bin \
+  && ln -sf ../prisma/build/index.js node_modules/.bin/prisma
 
 USER nextjs
 EXPOSE 3000
@@ -35,4 +45,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Apply the current Prisma schema before starting. DATABASE_URL must be set by Render.
-CMD ["sh", "-c", "node_modules/.bin/prisma db push --skip-generate && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js db push --skip-generate && node server.js"]
