@@ -11,7 +11,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -57,11 +58,18 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "^15.3.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
     "postcss": "^8",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.2",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "npm run lint --fix"
+    ]
   },
   "allowScripts": {
     "@prisma/client@5.22.0": true,
