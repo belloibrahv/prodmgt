@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -23,8 +24,17 @@ export default function RegisterForm() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Registration failed"); return; }
-      toast.success("Account created! Please sign in.");
-      router.push("/login");
+
+      // Sign straight in so new users land in the app, not back on a form.
+      const login = await signIn("credentials", { email: form.email, password: form.password, redirect: false });
+      if (login?.error) {
+        toast.success("Account created. Please sign in.");
+        router.push("/login");
+        return;
+      }
+      toast.success("Welcome to TechVaults!");
+      router.push("/dashboard");
+      router.refresh();
     } finally {
       setLoading(false);
     }
@@ -34,11 +44,11 @@ export default function RegisterForm() {
     setForm({ ...form, [k]: e.target.value });
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <Input label="Full name" placeholder="Kudirat Taiwo" value={form.name} onChange={set("name")} leftIcon={<User size={14} />} required />
-      <Input label="Email address" type="email" placeholder="you@techvaults.com" value={form.email} onChange={set("email")} leftIcon={<Mail size={14} />} required />
-      <Input label="Password" type="password" placeholder="Min. 8 characters" value={form.password} onChange={set("password")} leftIcon={<Lock size={14} />} minLength={8} required />
-      <Input label="Job title" placeholder="Product Manager" value={form.jobTitle} onChange={set("jobTitle")} leftIcon={<Briefcase size={14} />} />
+    <form method="post" onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <Input label="Full name" placeholder="Your full name" value={form.name} onChange={set("name")} leftIcon={<User size={14} />} required />
+      <Input label="Email address" type="email" placeholder="you@company.com" value={form.email} onChange={set("email")} leftIcon={<Mail size={14} />} autoComplete="email" required />
+      <Input label="Password" type="password" placeholder="Min. 8 characters" value={form.password} onChange={set("password")} leftIcon={<Lock size={14} />} minLength={8} autoComplete="new-password" required />
+      <Input label="Job title (optional)" placeholder="Product Manager" value={form.jobTitle} onChange={set("jobTitle")} leftIcon={<Briefcase size={14} />} />
       <Button type="submit" loading={loading} className="w-full justify-center py-2.5 mt-1">
         Create account
       </Button>

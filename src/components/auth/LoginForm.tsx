@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 
 export default function LoginForm() {
   const router = useRouter();
+  const callbackUrl = useSearchParams().get("callbackUrl");
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
@@ -35,7 +36,8 @@ export default function LoginForm() {
         setErrors({ password: "Invalid credentials" });
       } else {
         toast.success("Welcome back!");
-        router.push("/dashboard");
+        // Only follow same-site paths back after signing in.
+        router.push(callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/dashboard");
         router.refresh();
       }
     } finally {
@@ -45,6 +47,8 @@ export default function LoginForm() {
 
   return (
     <motion.form
+      // POST so an early submit before hydration never puts credentials in the URL.
+      method="post"
       onSubmit={handleSubmit}
       className="flex flex-col gap-4"
       initial={{ opacity: 0, y: 20 }}
@@ -59,7 +63,7 @@ export default function LoginForm() {
         <Input
           label="Email address"
           type="email"
-          placeholder="you@techvaults.com"
+          placeholder="you@company.com"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           error={errors.email}
@@ -93,17 +97,6 @@ export default function LoginForm() {
         >
           {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
         </motion.button>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
-        className="flex justify-end"
-      >
-        <button type="button" className="text-xs text-tva-red hover:underline font-medium">
-          Forgot password?
-        </button>
       </motion.div>
 
       <motion.div

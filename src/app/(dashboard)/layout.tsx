@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import Sidebar from "@/components/layout/Sidebar";
-import Topbar from "@/components/layout/Topbar";
+import { getWorkspaceMembers } from "@/lib/actions/team";
+import AppShell from "@/components/layout/AppShell";
 
 // Dashboard content is per-user and reads live project data from PostgreSQL.
 // Keep it out of the image build/static-generation phase.
@@ -11,17 +11,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const members = await getWorkspaceMembers();
+
   return (
-    <div className="flex h-screen overflow-hidden bg-tva-surface">
-      <Sidebar />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Topbar user={session.user} />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6">
-          <div className="animate-fade-in">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
+    <AppShell user={session.user} members={members}>
+      {children}
+    </AppShell>
   );
 }

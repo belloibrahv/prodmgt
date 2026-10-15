@@ -21,7 +21,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       prisma.task.count({ where: { project: { OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } } }),
       prisma.task.count({ where: { status: { notIn: [TaskStatus.DONE, TaskStatus.BLOCKED] }, project: { OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } } }),
       prisma.task.count({ where: { dueDate: { lt: new Date() }, status: { notIn: [TaskStatus.DONE] }, project: { OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } } }),
-      prisma.user.count(),
+      prisma.user.count({ where: { passwordHash: { not: null } } }),
     ]);
 
   return { totalProjects, activeProjects, completedProjects, totalTasks, openTasks, overdueTasks, teamSize };
@@ -80,8 +80,7 @@ export async function getTaskCompletionTrend() {
       },
       status: TaskStatus.DONE,
     },
-    select: { updatedAt: true },
-    orderBy: { updatedAt: "asc" },
+    select: { completedAt: true, updatedAt: true },
   });
 
   const last30Days = Array.from({ length: 30 }, (_, i) => {
@@ -91,7 +90,7 @@ export async function getTaskCompletionTrend() {
   });
 
   const completionByDate = tasks.reduce((acc, task) => {
-    const date = task.updatedAt.toISOString().split('T')[0];
+    const date = (task.completedAt ?? task.updatedAt).toISOString().split('T')[0];
     acc[date] = (acc[date] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -106,25 +105,24 @@ export async function getTeamWorkloadData() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  const users = await prisma.user.findMany({
-    select: { id: true, name: true },
+  // Open tasks per assignee, limited to projects the viewer can see.
+  const groups = await prisma.task.groupBy({
+    by: ["assigneeId"],
+    where: {
+      assigneeId: { not: null },
+      status: { notIn: [TaskStatus.DONE, TaskStatus.BLOCKED] },
+      project: { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
+    },
+    _count: { _all: true },
   });
 
-  const workload = await Promise.all(
-    users.map(async (user) => {
-      const assignedTasks = await prisma.task.count({
-        where: {
-          assigneeId: user.id,
-          status: { notIn: [TaskStatus.DONE, TaskStatus.BLOCKED] },
-        },
-      });
+  const users = await prisma.user.findMany({
+    where: { id: { in: groups.map((g) => g.assigneeId!) } },
+    select: { id: true, name: true, email: true },
+  });
+  const byId = new Map(users.map((u) => [u.id, u.name || u.email]));
 
-      return {
-        name: user.name || 'Unknown',
-        tasks: assignedTasks,
-      };
-    })
-  );
-
-  return workload.filter(w => w.tasks > 0);
+  return groups
+    .map((g) => ({ name: byId.get(g.assigneeId!) ?? "Unknown", tasks: g._count._all }))
+    .sort((a, b) => b.tasks - a.tasks);
 }

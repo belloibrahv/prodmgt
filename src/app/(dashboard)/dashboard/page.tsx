@@ -36,7 +36,7 @@ export default async function DashboardPage() {
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-tva-ink">
-            Good morning, {firstName} 👋
+            Welcome back, {firstName} 👋
           </h1>
           <p className="text-sm text-tva-ink-m mt-0.5">
             Here&apos;s what&apos;s happening across your projects — {today}

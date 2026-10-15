@@ -36,7 +36,7 @@ export default function ProjectDetailClient({
   const [pending, startTransition] = useTransition();
   const [tab, setTab] = useState<Tab>("Overview");
   const [taskView, setTaskView] = useState<"kanban" | "table">("kanban");
-  const [showNewTask, setShowNewTask] = useState(false);
+  const [newTaskStatus, setNewTaskStatus] = useState<string | null>(null);
   const [showEditProject, setShowEditProject] = useState(false);
   const [showNewDoc, setShowNewDoc] = useState(false);
   const [showInviteMember, setShowInviteMember] = useState(false);
@@ -146,15 +146,15 @@ export default function ProjectDetailClient({
                   <button
                     key={v}
                     onClick={() => setTaskView(v)}
-                    className={cn("px-3 py-1 text-[12px] font-medium rounded-6 capitalize transition-colors",
+                    className={cn("px-3 py-1 text-[12px] font-medium rounded-4 capitalize transition-colors",
                       taskView === v ? "bg-tva-red-lt text-tva-red" : "text-tva-ink-m hover:text-tva-red"
                     )}
                   >
-                    {v}
+                    {v === "kanban" ? "Board" : "Table"}
                   </button>
                 ))}
               </div>
-              <Button size="sm" onClick={() => setShowNewTask(true)}>
+              <Button size="sm" onClick={() => setNewTaskStatus("TODO")}>
                 <Plus size={13} /> Add Task
               </Button>
             </div>
@@ -176,7 +176,7 @@ export default function ProjectDetailClient({
           {tab === "Overview" && <ProjectOverview project={project} pct={pct} />}
           {tab === "Tasks" && (
             taskView === "kanban"
-              ? <KanbanBoard tasks={project.tasks as never} projectId={project.id} />
+              ? <KanbanBoard tasks={project.tasks as never} onAddTask={(status) => setNewTaskStatus(status)} />
               : <TaskTable tasks={project.tasks as never} project={{ emoji: project.emoji, name: project.name }} />
           )}
           {tab === "Milestones" && <ProjectMilestones milestones={project.milestones} tasks={project.tasks} />}
@@ -186,11 +186,12 @@ export default function ProjectDetailClient({
       </div>
 
       <NewTaskModal
-        open={showNewTask}
-        onClose={() => setShowNewTask(false)}
+        open={newTaskStatus !== null}
+        onClose={() => setNewTaskStatus(null)}
         projectId={project.id}
         members={workspaceMembers}
         milestones={project.milestones}
+        defaultStatus={newTaskStatus ?? "TODO"}
       />
 
       <EditProjectModal

@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
+import { canManageProject } from "@/lib/access";
 import { z } from "zod";
 import type { ActionResult, ProjectWithRelations } from "@/types";
 
 const projectSchema = z.object({
-  name:        z.string().min(1).max(100),
+  name:        z.string().trim().min(1, "Project name is required").max(100),
   description: z.string().optional(),
   emoji:       z.string().optional(),
   color:       z.string().optional(),
@@ -55,7 +56,10 @@ export async function getProjectById(id: string): Promise<ProjectWithRelations |
       owner: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
       members: { include: { user: { select: { id: true, name: true, email: true, image: true, jobTitle: true } } } },
       tasks: {
+        where: { parentId: null },
         include: {
+          project: { select: { id: true, name: true, color: true, emoji: true } },
+          milestone: true,
           assignee: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
           creator: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
           subtasks: true,
@@ -128,6 +132,10 @@ export async function updateProject(id: string, formData: FormData): Promise<Act
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
 
+  if (!(await canManageProject(id, session.user.id))) {
+    return { success: false, error: "Only project owners and admins can edit project details" };
+  }
+
   const raw = Object.fromEntries(formData.entries());
   const parsed = projectSchema.partial().safeParse(raw);
   if (!parsed.success) return { success: false, error: parsed.error.errors[0].message };
@@ -140,12 +148,13 @@ export async function updateProject(id: string, formData: FormData): Promise<Act
       priority:  parsed.data.priority as never,
       startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : undefined,
       dueDate:   parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined,
-      completedAt: parsed.data.status === "COMPLETED" ? new Date() : undefined,
+      completedAt: parsed.data.status ? (parsed.data.status === "COMPLETED" ? new Date() : null) : undefined,
     },
   });
 
   revalidatePath(`/projects/${id}`);
   revalidatePath("/projects");
+  revalidatePath("/dashboard");
   return { success: true, data: null };
 }
 
@@ -190,6 +199,9 @@ export async function addProjectMember(projectId: string, formData: FormData): P
 
   if ((!userId && !email) || !role) {
     return { success: false, error: "Member and role are required" };
+  }
+  if (!["ADMIN", "MEMBER", "VIEWER"].includes(role)) {
+    return { success: false, error: "Choose Admin, Member or Viewer" };
   }
 
   const user = userId
@@ -290,8 +302,9 @@ export async function updateProjectMemberRole(projectId: string, userId: string,
     return { success: false, error: "Only project owners can change member roles" };
   }
 
-  // Don't allow changing owner's role
+  // Don't allow changing owner's role, or handing out a second owner
   if (userId === project.ownerId) return { success: false, error: "Cannot change owner's role" };
+  if (!["ADMIN", "MEMBER", "VIEWER"].includes(role)) return { success: false, error: "Choose Admin, Member or Viewer" };
 
   await prisma.projectMember.updateMany({
     where: { projectId, userId },

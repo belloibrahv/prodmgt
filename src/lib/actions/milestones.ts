@@ -3,18 +3,25 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db/prisma";
+import { canEditProject, NO_ACCESS } from "@/lib/access";
 import { z } from "zod";
 import type { ActionResult } from "@/types";
 
 const milestoneSchema = z.object({
-  name:        z.string().min(1).max(200),
+  name:        z.string().trim().min(1, "Milestone name is required").max(200),
   description: z.string().optional(),
   dueDate:     z.string().min(1, "Due date is required"),
 });
 
+async function milestoneInProject(id: string, projectId: string) {
+  const m = await prisma.milestone.findUnique({ where: { id }, select: { projectId: true } });
+  return m?.projectId === projectId;
+}
+
 export async function createMilestone(projectId: string, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (!(await canEditProject(projectId, session.user.id))) return { success: false, error: NO_ACCESS };
 
   const raw = {
     name:        formData.get("name"),
@@ -35,12 +42,16 @@ export async function createMilestone(projectId: string, formData: FormData): Pr
   });
 
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/timeline");
   return { success: true, data: { id: milestone.id } };
 }
 
 export async function updateMilestone(id: string, projectId: string, formData: FormData): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (!(await milestoneInProject(id, projectId)) || !(await canEditProject(projectId, session.user.id))) {
+    return { success: false, error: NO_ACCESS };
+  }
 
   const raw = {
     name:        formData.get("name"),
@@ -60,22 +71,30 @@ export async function updateMilestone(id: string, projectId: string, formData: F
   });
 
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/timeline");
   return { success: true, data: null };
 }
 
 export async function deleteMilestone(id: string, projectId: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (!(await milestoneInProject(id, projectId)) || !(await canEditProject(projectId, session.user.id))) {
+    return { success: false, error: NO_ACCESS };
+  }
 
   await prisma.milestone.delete({ where: { id } });
 
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/timeline");
   return { success: true, data: null };
 }
 
 export async function toggleMilestoneComplete(id: string, projectId: string): Promise<ActionResult> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Not authenticated" };
+  if (!(await milestoneInProject(id, projectId)) || !(await canEditProject(projectId, session.user.id))) {
+    return { success: false, error: NO_ACCESS };
+  }
 
   const milestone = await prisma.milestone.findUnique({ where: { id }, select: { completedAt: true } });
   if (!milestone) return { success: false, error: "Milestone not found" };
@@ -86,5 +105,6 @@ export async function toggleMilestoneComplete(id: string, projectId: string): Pr
   });
 
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/timeline");
   return { success: true, data: null };
 }

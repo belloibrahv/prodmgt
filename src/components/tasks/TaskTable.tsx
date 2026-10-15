@@ -8,6 +8,9 @@ import { getDueLabel, formatDate, cn } from "@/lib/utils";
 import TaskDetailModal from "./TaskDetailModal";
 import type { TaskWithRelations } from "@/types";
 
+const PRIORITY_RANK: Record<string, number> = { LOW: 0, MEDIUM: 1, HIGH: 2, CRITICAL: 3 };
+const STATUS_RANK: Record<string, number> = { BACKLOG: 0, TODO: 1, IN_PROGRESS: 2, IN_REVIEW: 3, BLOCKED: 4, DONE: 5 };
+
 type SortKey = "title" | "status" | "priority" | "dueDate" | "assignee";
 
 interface TaskTableProps {
@@ -17,7 +20,9 @@ interface TaskTableProps {
 }
 
 export default function TaskTable({ tasks, project: projectProp }: TaskTableProps) {
-  const [selected, setSelected] = useState<TaskWithRelations | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Look the task up by id so the modal shows fresh data after each save.
+  const selected = tasks.find((t) => t.id === selectedId) ?? null;
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "dueDate", dir: "asc" });
 
   function toggleSort(key: SortKey) {
@@ -32,7 +37,8 @@ export default function TaskTable({ tasks, project: projectProp }: TaskTableProp
       return (new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()) * dir;
     }
     if (sort.key === "assignee") return ((a.assignee?.name ?? "").localeCompare(b.assignee?.name ?? "")) * dir;
-    return (a[sort.key] as string).localeCompare(b[sort.key] as string) * dir;
+    if (sort.key === "priority") return (PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]) * dir;
+    return (STATUS_RANK[a.status] - STATUS_RANK[b.status]) * dir;
   });
 
   function SortIcon({ k }: { k: SortKey }) {
@@ -77,7 +83,7 @@ export default function TaskTable({ tasks, project: projectProp }: TaskTableProp
                 return (
                   <tr
                     key={task.id}
-                    onClick={() => setSelected(task)}
+                    onClick={() => setSelectedId(task.id)}
                     className="border-b border-tva-border/50 hover:bg-tva-red-xlt cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 max-w-[240px]">
@@ -107,7 +113,7 @@ export default function TaskTable({ tasks, project: projectProp }: TaskTableProp
                 );
               })}
               {sorted.length === 0 && (
-                <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-tva-ink-m">No tasks found.</td></tr>
+                <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-tva-ink-m">No tasks match these filters.</td></tr>
               )}
             </tbody>
           </table>
@@ -115,7 +121,7 @@ export default function TaskTable({ tasks, project: projectProp }: TaskTableProp
       </div>
 
       {selected && (
-        <TaskDetailModal task={selected} open={!!selected} onClose={() => setSelected(null)} />
+        <TaskDetailModal key={selected.id} task={selected} open onClose={() => setSelectedId(null)} />
       )}
     </>
   );

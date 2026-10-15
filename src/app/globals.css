@@ -100,6 +100,10 @@
   html {
     @apply font-sans;
   }
+  /* Smooth in-page anchor scrolling on the marketing homepage only */
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(#tva-marketing) { scroll-behavior: smooth; }
+  }
 }
 
 @layer components {

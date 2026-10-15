@@ -1,25 +1,14 @@
 import { Metadata } from "next";
 import { getAllTasks } from "@/lib/actions/tasks";
 import { getProjects } from "@/lib/actions/projects";
-import { getWorkspaceMembers } from "@/lib/actions/team";
 import TasksClient from "@/components/tasks/TasksClient";
 
 export const metadata: Metadata = { title: "Tasks" };
 
 export default async function TasksPage() {
   try {
-    const [tasks, projects, workspaceMembers] = await Promise.all([
-      getAllTasks(),
-      getProjects(),
-      getWorkspaceMembers(),
-    ]);
-    return (
-      <TasksClient
-        tasks={tasks}
-        projects={projects}
-        workspaceMembers={workspaceMembers}
-      />
-    );
+    const [tasks, projects] = await Promise.all([getAllTasks(), getProjects()]);
+    return <TasksClient tasks={tasks} projects={projects} />;
   } catch (error) {
     console.error("Error loading tasks page:", error);
     return (

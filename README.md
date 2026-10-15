@@ -10,19 +10,20 @@ An internal workspace for TechVaults teams to manage projects, tasks, milestones
 4. Optionally add the sample workspace with `npm run db:seed`.
 5. Run `npm run dev`.
 
-## Render deployment (Docker)
+## Deployment (Railway)
 
-This repository includes a multi-stage `Dockerfile` and `render.yaml`. Deploy it as a Render Blueprint to provision the web service and a managed Render Postgres database together. The app automatically receives the database's private `DATABASE_URL`; do not set that variable manually.
+Production runs on Railway from the `main` branch of `techvaults-jobs/prodmgt`, using the `Dockerfile`. `railway.json` holds the service settings:
 
-Set:
+- `prisma migrate deploy` runs before every deploy, so new migrations in `prisma/migrations` are applied automatically.
+- Railway checks `/api/health`, which confirms the app can reach the database.
 
-- `NEXTAUTH_SECRET` — use a strong generated secret
-- `NEXTAUTH_URL` — the public Render service URL, e.g. `https://techvaults-prodmgt.onrender.com`
+The service needs these variables:
 
-The container applies the Prisma schema on startup before it launches the application. Render provides the `PORT` automatically.
+- `DATABASE_URL` — reference the Railway Postgres service (`${{Postgres.DATABASE_URL}}`)
+- `AUTH_SECRET` and `NEXTAUTH_SECRET` — strong generated secrets
+- `AUTH_URL` and `NEXTAUTH_URL` — the public URL, e.g. `https://${{RAILWAY_PUBLIC_DOMAIN}}`
+- `AUTH_TRUST_HOST=true`
 
-### Production database administration
+When you change `prisma/schema.prisma`, always commit a migration with it (`npm run db:migrate`). The app queries columns that only exist once their migration has run.
 
-The Blueprint blocks external database connections and keeps app-to-database traffic on Render's private network. To manage the production schema and records directly in Render, open the `techvaults-prodmgt-db` database in the Render Dashboard, select **Apps**, and deploy **pgAdmin**. It provides a protected browser interface for tables, indexes, schema changes, and one-off SQL queries. Deploy **PgHero** from the same screen for performance monitoring and slow-query analysis.
-
-Store the generated pgAdmin credentials in a password manager and grant access only to authorized TechVaults administrators. Do not add a database console to the main product-management app; it would unnecessarily expose destructive database operations to normal users.
+`render.yaml` is the older Render setup and is no longer used.
