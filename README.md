@@ -12,10 +12,12 @@ An internal workspace for TechVaults teams to manage projects, tasks, milestones
 
 ## Deployment (Railway)
 
-Production runs on Railway from the `main` branch of `techvaults-jobs/prodmgt`, using the `Dockerfile`. `railway.json` holds the service settings:
+Production runs on Railway (project `prodmgt` in the Techvaults workspace) and deploys automatically on every push to `main` of `techvaults-jobs/prodmgt`, building the `Dockerfile`. These are set on the Railway service itself:
 
-- `prisma migrate deploy` runs before every deploy, so new migrations in `prisma/migrations` are applied automatically.
-- Railway checks `/api/health`, which confirms the app can reach the database.
+- Pre-deploy command `node node_modules/prisma/build/index.js migrate deploy`, so new migrations in `prisma/migrations` are applied before the new version goes live.
+- Health check on `/api/health`, which confirms the app can reach the database.
+
+`railway.json` records the same settings, but Railway no longer reads it for this service; change them in the Railway dashboard.
 
 The service needs these variables:
 
