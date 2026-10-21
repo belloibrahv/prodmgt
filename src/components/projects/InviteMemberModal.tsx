@@ -62,12 +62,12 @@ export default function InviteMemberModal({ open, onClose, projectId, workspaceM
     >
       <form id="invite-member-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         {availableMembers.length === 0 ? (
-          <p className="text-[12px] text-tva-ink-m -mt-1 mb-2">
+          <p className="text-xs text-muted-foreground -mt-1 mb-2">
             All workspace members are already in this project. Invite more team members to the workspace first.
           </p>
         ) : (
           <>
-            <p className="text-[12px] text-tva-ink-m -mt-1 mb-2">
+            <p className="text-xs text-muted-foreground -mt-1 mb-2">
               Select a team member from your workspace to add to this project.
             </p>
             <Select

@@ -1,104 +1,58 @@
-"use client";
-
-import { useRouter } from "next/navigation";
-import { CalendarIcon, ClipboardListIcon, FileTextIcon, UsersIcon } from "lucide-react";
-import { motion } from "framer-motion";
+import Link from "next/link";
+import { CalendarIcon, ClipboardListIcon, FileTextIcon } from "lucide-react";
 import { AvatarGroup } from "@/components/ui/Avatar";
-import { StatusBadge, PriorityBadge } from "@/components/ui/StatusBadge";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { formatDate, getProgressPercent } from "@/lib/utils";
+import { PriorityBadge, StatusBadge } from "@/components/ui/StatusBadge";
+import { formatDate, getDueLabel, getProgressPercent, cn } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
 import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
-interface Props { project: ProjectWithRelations; listView?: boolean }
-
-export default function ProjectCard({ project: p, listView }: Props) {
-  const router = useRouter();
+export default function ProjectCard({ project: p }: { project: ProjectWithRelations }) {
+  const done = p.tasks.filter((t) => t.status === "DONE").length;
   const pct = getProgressPercent(p.tasks);
-  const members = p.members.map((m) => m.user);
-
-  if (listView) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.01 }}
-        onClick={() => router.push(`/projects/${p.id}`)}
-        className="bg-white border border-tva-border/60 rounded-20 px-5 py-4 flex items-center gap-5 cursor-pointer hover:shadow-lg hover:border-tva-red/40 transition-all group"
-        style={{ borderLeft: `4px solid ${p.color}` }}
-      >
-        <ProjectIcon icon={p.emoji} color={p.color} />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-tva-ink group-hover:text-tva-red transition-colors truncate">{p.name}</p>
-          <p className="text-xs text-tva-ink-m truncate">{p.description}</p>
-        </div>
-        <div className="flex items-center gap-4 flex-shrink-0">
-          <StatusBadge status={p.status} />
-          <PriorityBadge priority={p.priority} />
-          <div className="flex items-center gap-1.5 text-xs text-tva-ink-m font-medium">
-            <ClipboardListIcon size={14} /> {p._count.tasks}
-          </div>
-          <div className="w-24">
-            <ProgressBar value={pct} showLabel />
-          </div>
-          <AvatarGroup users={members} max={3} />
-        </div>
-      </motion.div>
-    );
-  }
+  const overdue = p.status !== "COMPLETED" && getDueLabel(p.dueDate).variant === "overdue";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4, boxShadow: "0 12px 24px -8px rgba(0,0,0,0.15)" }}
-      onClick={() => router.push(`/projects/${p.id}`)}
-      className="bg-white border border-tva-border/60 rounded-20 shadow-sm cursor-pointer hover:border-tva-red/40 transition-all flex flex-col overflow-hidden group"
+    <Link
+      href={`/projects/${p.id}`}
+      className="group flex flex-col rounded-xl border bg-card shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/40 focus-visible:outline-none"
     >
-      {/* Top color bar */}
-      <div className="h-1.5" style={{ backgroundColor: p.color }} />
-
-      <div className="p-5 flex flex-col gap-3 flex-1">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        <div className="flex items-start justify-between gap-3">
           <ProjectIcon icon={p.emoji} color={p.color} size="lg" />
           <StatusBadge status={p.status} />
         </div>
 
-        {/* Name & desc */}
-        <div>
-          <h3 className="text-base font-semibold text-tva-ink group-hover:text-tva-red transition-colors leading-tight">{p.name}</h3>
-          {p.description && (
-            <p className="text-xs text-tva-ink-m mt-1.5 line-clamp-2 leading-relaxed">{p.description}</p>
-          )}
+        <div className="min-w-0">
+          <h3 className="truncate font-semibold leading-tight group-hover:text-primary">{p.name}</h3>
+          <p className="mt-1 line-clamp-2 min-h-10 text-sm text-muted-foreground">
+            {p.description || "No description"}
+          </p>
         </div>
 
-        {/* Stats row */}
-        <div className="flex gap-4 text-xs text-tva-ink-m">
-          <span className="flex items-center gap-1.5 font-medium"><ClipboardListIcon size={14} />{p._count.tasks} tasks</span>
-          <span className="flex items-center gap-1.5 font-medium"><FileTextIcon size={14} />{p._count.documents} docs</span>
-          <span className="flex items-center gap-1.5 font-medium"><UsersIcon size={14} />{p._count.members}</span>
-        </div>
-
-        {/* Progress */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex justify-between text-xs font-semibold text-tva-ink-m">
-            <span>Progress</span><span>{pct}%</span>
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">{done} of {p.tasks.length} tasks done</span>
+            <span className="font-medium tabular-nums">{pct}%</span>
           </div>
-          <ProgressBar value={pct} />
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${p.name} progress`}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: p.color }} />
+          </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-5 py-3.5 border-t border-tva-border/40 flex items-center justify-between bg-tva-surface/30">
-        <AvatarGroup users={members} max={3} />
-        {p.dueDate && (
-          <span className="flex items-center gap-1.5 text-xs text-tva-ink-m font-medium">
-            <CalendarIcon size={13} /> {formatDate(p.dueDate)}
-          </span>
-        )}
-        <PriorityBadge priority={p.priority} />
+      <div className="flex items-center gap-3 border-t px-5 py-3 text-xs text-muted-foreground">
+        <AvatarGroup users={p.members.map((m) => m.user)} max={3} />
+        <span className="flex items-center gap-1"><ClipboardListIcon className="size-3.5" aria-hidden />{p._count.tasks}</span>
+        <span className="flex items-center gap-1"><FileTextIcon className="size-3.5" aria-hidden />{p._count.documents}</span>
+        <span className="ml-auto flex items-center gap-2">
+          <PriorityBadge priority={p.priority} className="hidden sm:inline-flex" />
+          {p.dueDate && (
+            <span className={cn("flex items-center gap-1", overdue && "font-medium text-destructive")}>
+              <CalendarIcon className="size-3.5" aria-hidden />{formatDate(p.dueDate)}
+            </span>
+          )}
+        </span>
       </div>
-    </motion.div>
+    </Link>
   );
 }

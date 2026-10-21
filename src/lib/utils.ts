@@ -51,13 +51,34 @@ export function formatDate(date: Date | string | null | undefined): string {
   return format(d, "MMM d, yyyy");
 }
 
+/** Badge tint per task or project status. */
 export const STATUS_COLORS: Record<string, string> = {
-  BACKLOG: "bg-gray-100 text-gray-600",
+  BACKLOG: "bg-zinc-100 text-zinc-600",
   TODO: "bg-blue-50 text-blue-700",
-  IN_PROGRESS: "bg-yellow-50 text-yellow-700",
-  IN_REVIEW: "bg-purple-50 text-purple-700",
-  DONE: "bg-green-50 text-green-700",
+  IN_PROGRESS: "bg-amber-50 text-amber-700",
+  IN_REVIEW: "bg-violet-50 text-violet-700",
+  DONE: "bg-emerald-50 text-emerald-700",
   BLOCKED: "bg-red-50 text-red-700",
+  PLANNING: "bg-blue-50 text-blue-700",
+  ACTIVE: "bg-emerald-50 text-emerald-700",
+  ON_HOLD: "bg-amber-50 text-amber-700",
+  COMPLETED: "bg-zinc-100 text-zinc-600",
+  CANCELLED: "bg-red-50 text-red-700",
+};
+
+/** Dot colour that accompanies each status label. */
+export const STATUS_DOTS: Record<string, string> = {
+  BACKLOG: "bg-zinc-400",
+  TODO: "bg-blue-500",
+  IN_PROGRESS: "bg-amber-500",
+  IN_REVIEW: "bg-violet-500",
+  DONE: "bg-emerald-500",
+  BLOCKED: "bg-red-500",
+  PLANNING: "bg-blue-500",
+  ACTIVE: "bg-emerald-500",
+  ON_HOLD: "bg-amber-500",
+  COMPLETED: "bg-zinc-400",
+  CANCELLED: "bg-red-500",
 };
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -67,10 +88,15 @@ export const STATUS_LABELS: Record<string, string> = {
   IN_REVIEW: "In Review",
   DONE: "Done",
   BLOCKED: "Blocked",
+  PLANNING: "Planning",
+  ACTIVE: "Active",
+  ON_HOLD: "On hold",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
 export const PRIORITY_COLORS: Record<string, string> = {
-  LOW: "bg-gray-50 text-gray-600",
+  LOW: "bg-zinc-100 text-zinc-600",
   MEDIUM: "bg-blue-50 text-blue-700",
   HIGH: "bg-orange-50 text-orange-700",
   CRITICAL: "bg-red-50 text-red-700",

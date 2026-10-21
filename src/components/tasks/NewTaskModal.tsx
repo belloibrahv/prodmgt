@@ -81,7 +81,7 @@ export default function NewTaskModal({
   if (!projectId && projects.length === 0) {
     return (
       <Modal open={open} onClose={onClose} title="Add task" size="sm">
-        <p className="text-[14px] text-tva-ink-m">Create a project first. Every task belongs to a project.</p>
+        <p className="text-sm text-muted-foreground">Create a project first. Every task belongs to a project.</p>
       </Modal>
     );
   }

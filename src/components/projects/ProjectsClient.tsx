@@ -1,101 +1,233 @@
 "use client";
 
-import { useState } from "react";
-import { FolderOpenIcon, LayoutGridIcon, ListIcon, PlusIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { FolderOpenIcon, LayoutGridIcon, ListIcon, PlusIcon, SearchIcon, SearchXIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AvatarGroup } from "@/components/ui/Avatar";
+import { PriorityBadge, StatusBadge } from "@/components/ui/StatusBadge";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { ProjectIcon } from "./ProjectIcon";
 import ProjectCard from "./ProjectCard";
 import NewProjectModal from "./NewProjectModal";
+import { formatDate, getProgressPercent } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
-import { cn } from "@/lib/utils";
 
-const STATUS_OPTS = [
-  { value: "all", label: "All Status" },
-  { value: "PLANNING", label: "Planning" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "ON_HOLD", label: "On Hold" },
+const STATUS_TABS = [
+  { value: "all",       label: "All" },
+  { value: "ACTIVE",    label: "Active" },
+  { value: "PLANNING",  label: "Planning" },
+  { value: "ON_HOLD",   label: "On hold" },
   { value: "COMPLETED", label: "Completed" },
 ];
 
+const SORTS = [
+  { value: "updated",  label: "Recently updated" },
+  { value: "due",      label: "Due date" },
+  { value: "progress", label: "Progress" },
+  { value: "name",     label: "Name" },
+];
+
+type View = "grid" | "list";
+const VIEW_KEY = "tva-projects-view";
+
 export default function ProjectsClient({ projects }: { projects: ProjectWithRelations[] }) {
-  const [view, setView] = useState<"grid" | "list">("grid");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [view, setView] = useState<View>("grid");
+  const [status, setStatus] = useState("all");
+  const [sort, setSort] = useState("updated");
+  const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  const filtered = projects.filter(
-    (p) => statusFilter === "all" || p.status === statusFilter
-  );
+  // Remember the chosen view between visits.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_KEY);
+      if (saved === "grid" || saved === "list") setView(saved);
+    } catch { /* storage unavailable */ }
+  }, []);
+
+  function changeView(next: View) {
+    setView(next);
+    try { localStorage.setItem(VIEW_KEY, next); } catch { /* storage unavailable */ }
+  }
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: projects.length };
+    for (const p of projects) c[p.status] = (c[p.status] ?? 0) + 1;
+    return c;
+  }, [projects]);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const list = projects.filter((p) =>
+      (status === "all" || p.status === status) &&
+      (!q || p.name.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)),
+    );
+    const progress = (p: ProjectWithRelations) => getProgressPercent(p.tasks);
+    return list.sort((a, b) => {
+      switch (sort) {
+        case "name":     return a.name.localeCompare(b.name);
+        case "progress": return progress(b) - progress(a);
+        case "due": {
+          // Projects without a due date go last.
+          const ad = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+          const bd = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+          return ad - bd;
+        }
+        default: return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+    });
+  }, [projects, status, sort, query]);
+
+  const filtering = status !== "all" || query.trim() !== "";
 
   return (
     <>
-      <div className="space-y-6">
-        {/* Page header */}
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-tva-ink">Projects</h1>
-            <p className="text-sm text-tva-ink-m mt-1">
-              {projects.length} project{projects.length !== 1 ? "s" : ""} in your workspace
-            </p>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Status filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-white border border-tva-border/60 rounded-full px-4 py-2.5 text-sm text-tva-ink outline-none focus:border-tva-red focus:ring-2 focus:ring-tva-red/10 cursor-pointer appearance-none pr-10 transition-all"
-              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b4f4f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
-            >
-              {STATUS_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-
-            {/* View toggle */}
-            <div className="flex bg-white border border-tva-border/60 rounded-12 p-1 gap-1">
-              <button
-                onClick={() => setView("grid")}
-                className={cn("p-2 rounded-8 transition-all duration-200", view === "grid" ? "bg-tva-red text-white shadow-sm" : "text-tva-ink-m hover:text-tva-red hover:bg-tva-red-xlt")}
-                aria-label="Grid view"
-              >
-                <LayoutGridIcon size={18} />
-              </button>
-              <button
-                onClick={() => setView("list")}
-                className={cn("p-2 rounded-8 transition-all duration-200", view === "list" ? "bg-tva-red text-white shadow-sm" : "text-tva-ink-m hover:text-tva-red hover:bg-tva-red-xlt")}
-                aria-label="List view"
-              >
-                <ListIcon size={18} />
-              </button>
-            </div>
-
-            <Button onClick={() => setShowModal(true)} className="gap-2">
-              <PlusIcon size={18} /> New Project
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title="Projects"
+          description={`${projects.length} project${projects.length === 1 ? "" : "s"} in your workspace`}
+          actions={
+            <Button onClick={() => setShowModal(true)}>
+              <PlusIcon /> New project
             </Button>
+          }
+        />
+
+        {/* Toolbar */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <Tabs value={status} onValueChange={(v) => setStatus(String(v))} className="min-w-0">
+            <TabsList className="max-w-full overflow-x-auto">
+              {STATUS_TABS.map((t) => (
+                <TabsTrigger key={t.value} value={t.value} className="px-2.5">
+                  {t.label}
+                  <span className="rounded bg-foreground/5 px-1.5 text-xs tabular-nums text-muted-foreground">
+                    {counts[t.value] ?? 0}
+                  </span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <InputGroup className="h-8 w-full bg-card sm:w-60">
+              <InputGroupAddon><SearchIcon /></InputGroupAddon>
+              <InputGroupInput
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Filter projects…"
+                aria-label="Filter projects"
+              />
+            </InputGroup>
+            <Select items={SORTS} value={sort} onValueChange={(v) => v && setSort(String(v))}>
+              <SelectTrigger className="h-8 w-[170px] bg-card" aria-label="Sort projects">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <ToggleGroup
+              value={[view]}
+              onValueChange={(v) => v[0] && changeView(v[0] as View)}
+              variant="outline"
+              spacing={0}
+              className="bg-card"
+            >
+              <ToggleGroupItem value="grid" aria-label="Grid view"><LayoutGridIcon /></ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="List view"><ListIcon /></ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
 
-        {/* Grid or list */}
-        {filtered.length === 0 ? (
-          <EmptyState
-            icon={<FolderOpenIcon size={48} />}
-            title="No projects found"
-            description={statusFilter !== "all" ? "Try a different filter." : "Create your first project to get started."}
-            action={{ label: "Create Project", onClick: () => setShowModal(true) }}
-          />
-        ) : (
-          <div className={cn(
-            view === "grid"
-              ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5"
-              : "flex flex-col gap-3",
-          )}>
-            {filtered.map((p, index) => (
-              <div key={p.id} style={{ animationDelay: `${index * 50}ms` }}>
-                <ProjectCard project={p} listView={view === "list"} />
-              </div>
-            ))}
+        {visible.length === 0 ? (
+          <Empty className="rounded-xl border border-dashed bg-card py-16">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">{filtering ? <SearchXIcon /> : <FolderOpenIcon />}</EmptyMedia>
+              <EmptyTitle>{filtering ? "No matching projects" : "No projects yet"}</EmptyTitle>
+              <EmptyDescription>
+                {filtering ? "Try another status or search term." : "Create your first project to start planning work."}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              {filtering ? (
+                <Button variant="outline" onClick={() => { setStatus("all"); setQuery(""); }}>Clear filters</Button>
+              ) : (
+                <Button onClick={() => setShowModal(true)}><PlusIcon /> New project</Button>
+              )}
+            </EmptyContent>
+          </Empty>
+        ) : view === "grid" ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {visible.map((p) => <ProjectCard key={p.id} project={p} />)}
           </div>
+        ) : (
+          <ProjectsTable projects={visible} />
         )}
       </div>
 
       <NewProjectModal open={showModal} onClose={() => setShowModal(false)} />
     </>
+  );
+}
+
+function ProjectsTable({ projects }: { projects: ProjectWithRelations[] }) {
+  return (
+    <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/40 hover:bg-muted/40">
+            <TableHead className="pl-4">Project</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="hidden md:table-cell">Priority</TableHead>
+            <TableHead className="w-[180px]">Progress</TableHead>
+            <TableHead className="hidden lg:table-cell">Team</TableHead>
+            <TableHead className="hidden sm:table-cell pr-4">Due</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {projects.map((p) => {
+            const pct = getProgressPercent(p.tasks);
+            return (
+              <TableRow key={p.id} className="group">
+                <TableCell className="pl-4">
+                  <Link href={`/projects/${p.id}`} className="flex items-center gap-3 focus-visible:outline-none">
+                    <ProjectIcon icon={p.emoji} color={p.color} size="sm" />
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium group-hover:text-primary">{p.name}</span>
+                      <span className="block max-w-[320px] truncate text-xs text-muted-foreground">
+                        {p._count.tasks} tasks · {p._count.documents} docs
+                      </span>
+                    </span>
+                  </Link>
+                </TableCell>
+                <TableCell><StatusBadge status={p.status} /></TableCell>
+                <TableCell className="hidden md:table-cell"><PriorityBadge priority={p.priority} /></TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: p.color }} />
+                    </div>
+                    <span className="w-9 text-right text-xs tabular-nums text-muted-foreground">{pct}%</span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  <AvatarGroup users={p.members.map((m) => m.user)} max={3} />
+                </TableCell>
+                <TableCell className="hidden sm:table-cell pr-4 text-muted-foreground">
+                  {p.dueDate ? formatDate(p.dueDate) : "—"}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

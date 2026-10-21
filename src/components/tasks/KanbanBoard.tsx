@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { updateTaskStatus } from "@/lib/actions/tasks";
 import { KANBAN_COLUMNS, STATUS_LABELS } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
 import TaskCard from "./TaskCard";
 import type { TaskWithRelations } from "@/types";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,7 @@ export default function KanbanBoard({ tasks, onAddTask }: Props) {
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 min-h-[500px] -mx-4 px-4 sm:mx-0 sm:px-0 snap-x">
+    <div className="-mx-4 flex min-h-[520px] snap-x gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
       {KANBAN_COLUMNS.map((col) => {
         const colTasks = localTasks.filter((t) => t.status === col.id);
         const isOver = dragOver === col.id;
@@ -62,33 +63,33 @@ export default function KanbanBoard({ tasks, onAddTask }: Props) {
             key={col.id}
             aria-label={col.label}
             className={cn(
-              "flex flex-col min-w-[272px] max-w-[272px] rounded-16 border transition-colors snap-start",
-              isOver ? "border-tva-red/50 bg-tva-red-xlt" : "border-tva-border bg-tva-surface",
+              "flex w-[280px] min-w-[280px] snap-start flex-col rounded-xl border transition-colors",
+              isOver ? "border-primary/40 bg-accent" : "border-transparent bg-muted/60",
             )}
             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDragOver(col.id); }}
             onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null); }}
             onDrop={(e) => handleDrop(e, col.id)}
           >
-            <div className="flex items-center justify-between px-4 py-3 bg-white rounded-t-16 border-b border-tva-border">
+            <div className="flex items-center justify-between px-3 pt-3 pb-2">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: col.color }} />
-                <span className="text-[13px] font-semibold text-tva-ink">{col.label}</span>
-                <span className="text-[11px] font-bold bg-tva-border/60 text-tva-ink-m rounded-full px-2 py-0.5">
-                  {colTasks.length}
-                </span>
+                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: col.color }} aria-hidden />
+                <h2 className="text-sm font-medium">{col.label}</h2>
+                <span className="text-xs tabular-nums text-muted-foreground">{colTasks.length}</span>
               </div>
               {onAddTask && (
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => onAddTask(col.id)}
-                  className="p-1 rounded-8 text-tva-ink-m hover:bg-tva-red-xlt hover:text-tva-red transition-colors"
                   aria-label={`Add task to ${col.label}`}
+                  className="text-muted-foreground"
                 >
-                  <Plus size={15} />
-                </button>
+                  <Plus />
+                </Button>
               )}
             </div>
 
-            <div className="flex flex-col gap-2 p-3 flex-1">
+            <div className="flex flex-1 flex-col gap-2 px-2 pb-2">
               {colTasks.map((task) => (
                 <div
                   key={task.id}
@@ -107,12 +108,12 @@ export default function KanbanBoard({ tasks, onAddTask }: Props) {
                   onClick={() => onAddTask?.(col.id)}
                   disabled={!onAddTask}
                   className={cn(
-                    "flex-1 min-h-[80px] rounded-12 border-2 border-dashed flex items-center justify-center text-[12px] transition-colors",
-                    isOver ? "border-tva-red/40 text-tva-red/70" : "border-tva-border/70 text-tva-ink-m",
-                    onAddTask && "hover:border-tva-red/40 hover:text-tva-red",
+                    "flex min-h-[88px] flex-1 items-center justify-center gap-1.5 rounded-lg border border-dashed text-xs transition-colors",
+                    isOver ? "border-primary/40 text-primary" : "border-border text-muted-foreground",
+                    onAddTask && "hover:border-primary/30 hover:bg-card hover:text-foreground",
                   )}
                 >
-                  {isOver ? "Drop here" : onAddTask ? "+ Add a task" : "No tasks"}
+                  {isOver ? "Drop here" : onAddTask ? <><Plus className="size-3.5" aria-hidden /> Add a task</> : "No tasks"}
                 </button>
               )}
             </div>

@@ -45,7 +45,7 @@ export default function InviteTeamMemberModal({ open, onClose }: Props) {
       }
     >
       <form id="invite-team-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <p className="text-[12px] text-tva-ink-m -mt-1 mb-2">
+        <p className="text-xs text-muted-foreground -mt-1 mb-2">
           Add a new team member to your workspace. They will be able to join projects once invited.
         </p>
         <Input name="email" label="Email address" placeholder="colleague@company.com" type="email" required />

@@ -58,17 +58,17 @@ export default function EditProjectModal({ open, onClose, project }: Props) {
       <form id="edit-project-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-wrap gap-6">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-tva-ink-m">Icon</label>
+            <label className="text-xs font-semibold text-muted-foreground">Icon</label>
             <ProjectIconPicker value={emoji} color={color} onChange={setEmoji} />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-tva-ink-m">Color</label>
+            <label className="text-xs font-semibold text-muted-foreground">Color</label>
             <div className="flex flex-wrap gap-1.5 max-w-[120px]">
               {COLORS.map((c) => (
                 <button
                   key={c} type="button" onClick={() => setColor(c)}
                   style={{ backgroundColor: c }}
-                  className={`w-6 h-6 rounded-full transition-transform ${color === c ? "ring-2 ring-offset-2 ring-tva-ink scale-110" : "hover:scale-110"}`}
+                  className={`w-6 h-6 rounded-full transition-transform ${color === c ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-110"}`}
                   aria-label={`Color ${c}`}
                 />
               ))}

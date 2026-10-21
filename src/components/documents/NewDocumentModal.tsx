@@ -56,8 +56,8 @@ export default function NewDocumentModal({ open, onClose, projectId, projectName
         </>
       }
     >
-      <p className="text-[12px] text-tva-ink-m -mt-1 mb-2">
-        Creating in <span className="font-semibold text-tva-ink">{projectName}</span>
+      <p className="text-xs text-muted-foreground -mt-1 mb-2">
+        Creating in <span className="font-semibold text-foreground">{projectName}</span>
       </p>
       <form id="new-doc-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input name="title" label="Document title" placeholder="e.g. API Specification v2" required />
