@@ -6,11 +6,10 @@ import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Input, Select, Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ProjectIconPicker } from "@/components/projects/ProjectIconPicker";
+import { DEFAULT_PROJECT_ICON, type ProjectIconKey } from "@/lib/project-icons";
 import { createProject } from "@/lib/actions/projects";
 
-const EMOJIS = [
-  "📁", "🚀", "💡", "🏢", "📱", "🛒", "📊", "🎯", "⚙️", "🔬", "🎨", "📝",
-];
 const COLORS = ["#bc0004","#2563eb","#1da851","#f59e0b","#8b5cf6","#ec4899","#0891b2","#d97706"];
 
 interface Props { open: boolean; onClose: () => void }
@@ -18,7 +17,7 @@ interface Props { open: boolean; onClose: () => void }
 export default function NewProjectModal({ open, onClose }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [emoji, setEmoji] = useState("📁");
+  const [emoji, setEmoji] = useState<ProjectIconKey>(DEFAULT_PROJECT_ICON);
   const [color, setColor] = useState("#bc0004");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -52,20 +51,11 @@ export default function NewProjectModal({ open, onClose }: Props) {
       }
     >
       <form id="new-project-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Emoji + Color */}
-        <div className="flex gap-4">
+        {/* Icon + Color */}
+        <div className="flex flex-wrap gap-6">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-tva-ink-m">Icon</label>
-            <div className="flex flex-wrap gap-1.5 max-w-[160px]">
-              {EMOJIS.map((e) => (
-                <button
-                  key={e} type="button" onClick={() => setEmoji(e)}
-                  className={`w-8 h-8 rounded-8 flex items-center justify-center transition-colors ${emoji === e ? "bg-tva-red-lt ring-2 ring-tva-red" : "bg-tva-surface hover:bg-tva-red-xlt"}`}
-                >
-                  <span className={emoji === e ? "text-2xl" : "text-2xl opacity-60"}>{e}</span>
-                </button>
-              ))}
-            </div>
+            <ProjectIconPicker value={emoji} color={color} onChange={setEmoji} />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-tva-ink-m">Color</label>

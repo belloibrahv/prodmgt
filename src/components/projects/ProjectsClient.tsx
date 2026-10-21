@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MdGridOn, MdViewList, MdAdd, MdFolderOpen } from "react-icons/md";
+import { FolderOpenIcon, LayoutGridIcon, ListIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import ProjectCard from "./ProjectCard";
@@ -55,19 +55,19 @@ export default function ProjectsClient({ projects }: { projects: ProjectWithRela
                 className={cn("p-2 rounded-8 transition-all duration-200", view === "grid" ? "bg-tva-red text-white shadow-sm" : "text-tva-ink-m hover:text-tva-red hover:bg-tva-red-xlt")}
                 aria-label="Grid view"
               >
-                <MdGridOn size={18} />
+                <LayoutGridIcon size={18} />
               </button>
               <button
                 onClick={() => setView("list")}
                 className={cn("p-2 rounded-8 transition-all duration-200", view === "list" ? "bg-tva-red text-white shadow-sm" : "text-tva-ink-m hover:text-tva-red hover:bg-tva-red-xlt")}
                 aria-label="List view"
               >
-                <MdViewList size={18} />
+                <ListIcon size={18} />
               </button>
             </div>
 
             <Button onClick={() => setShowModal(true)} className="gap-2">
-              <MdAdd size={18} /> New Project
+              <PlusIcon size={18} /> New Project
             </Button>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function ProjectsClient({ projects }: { projects: ProjectWithRela
         {/* Grid or list */}
         {filtered.length === 0 ? (
           <EmptyState
-            icon={<MdFolderOpen size={48} />}
+            icon={<FolderOpenIcon size={48} />}
             title="No projects found"
             description={statusFilter !== "all" ? "Try a different filter." : "Create your first project to get started."}
             action={{ label: "Create Project", onClick: () => setShowModal(true) }}

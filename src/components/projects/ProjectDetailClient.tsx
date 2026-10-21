@@ -21,6 +21,7 @@ import InviteMemberModal from "./InviteMemberModal";
 import { deleteProject, removeProjectMember, updateProjectMemberRole } from "@/lib/actions/projects";
 import { cn } from "@/lib/utils";
 import type { ProjectWithRelations, WorkspaceMember } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
 const TABS = ["Overview", "Tasks", "Milestones", "Documents", "Members"] as const;
 type Tab = (typeof TABS)[number];
@@ -71,9 +72,7 @@ export default function ProjectDetailClient({
           <div className="p-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-16 bg-tva-surface flex items-center justify-center flex-shrink-0">
-                  <span className="text-3xl">{project.emoji}</span>
-                </div>
+                <ProjectIcon icon={project.emoji} color={project.color} size="lg" className="size-14 rounded-2xl" />
                 <div>
                   <h1 className="text-xl font-bold text-tva-ink">{project.name}</h1>
                   {project.description && (
@@ -177,7 +176,7 @@ export default function ProjectDetailClient({
           {tab === "Tasks" && (
             taskView === "kanban"
               ? <KanbanBoard tasks={project.tasks as never} onAddTask={(status) => setNewTaskStatus(status)} />
-              : <TaskTable tasks={project.tasks as never} project={{ emoji: project.emoji, name: project.name }} />
+              : <TaskTable tasks={project.tasks as never} project={{ emoji: project.emoji, color: project.color, name: project.name }} />
           )}
           {tab === "Milestones" && <ProjectMilestones milestones={project.milestones} tasks={project.tasks} />}
           {tab === "Documents" && <ProjectDocuments documents={project.documents} />}

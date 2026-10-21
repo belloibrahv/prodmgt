@@ -4,6 +4,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Avatar } from "@/components/ui/Avatar";
 import { formatDate } from "@/lib/utils";
 import type { DocumentWithRelations } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
 interface Props {
   doc: DocumentWithRelations;
@@ -25,7 +26,10 @@ export default function DocumentViewModal({ doc, open, onClose }: Props) {
             </div>
           </div>
           <div>
-            <p className="text-[12px] font-semibold text-tva-ink">{doc.project?.emoji} {doc.project?.name}</p>
+            <p className="flex items-center gap-1.5 text-[12px] font-semibold text-tva-ink">
+              {doc.project && <ProjectIcon icon={doc.project.emoji} color={doc.project.color} size="xs" />}
+              {doc.project?.name}
+            </p>
             <p className="text-[11px] text-tva-ink-m">Project</p>
           </div>
           <div>

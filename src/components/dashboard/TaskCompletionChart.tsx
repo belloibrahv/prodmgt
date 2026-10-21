@@ -1,74 +1,74 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
+import { TrendingUp } from "lucide-react";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 
-interface TaskCompletionChartProps {
+const config = {
+  completed: { label: "Completed", color: "var(--chart-1)" },
+} satisfies ChartConfig;
+
+interface Props {
   data: Array<{ date: string; completed: number }>;
 }
 
-export default function TaskCompletionChart({ data }: TaskCompletionChartProps) {
-  if (!data || data.length === 0) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="h-[200px] flex items-center justify-center text-tva-ink-m text-sm"
-      >
-        No task completion data available
-      </motion.div>
-    );
-  }
-
-  const chartData = data.map(item => ({
-    ...item,
-    formattedDate: format(new Date(item.date), "MMM dd"),
-  }));
+export default function TaskCompletionChart({ data }: Props) {
+  const total = data.reduce((sum, d) => sum + d.completed, 0);
+  const last7 = data.slice(-7).reduce((sum, d) => sum + d.completed, 0);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4, delay: 0.1 }}
-    >
-      <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-          <XAxis
-            dataKey="formattedDate"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 11, fill: "#64748b" }}
-            interval="preserveStartEnd"
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fontSize: 11, fill: "#64748b" }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              fontSize: "12px",
-            }}
-            labelFormatter={(label) => `Date: ${label}`}
-            formatter={(value: unknown) => [`Completed: ${typeof value === "number" ? value : 0}`, "Tasks"]}
-          />
-          <Line
-            type="monotone"
-            dataKey="completed"
-            stroke="#bc0004"
-            strokeWidth={2.5}
-            dot={false}
-            activeDot={{ r: 5, stroke: "#bc0004", strokeWidth: 2 }}
-            animationDuration={1000}
-            animationBegin={300}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </motion.div>
+    <Card className="shadow-xs">
+      <CardHeader>
+        <CardTitle>Tasks completed</CardTitle>
+        <CardDescription>Last 30 days</CardDescription>
+        <CardAction className="text-right">
+          <p className="text-2xl font-semibold tracking-tight tabular-nums">{total}</p>
+          <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <TrendingUp className="size-3.5" aria-hidden /> {last7} this week
+          </p>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-2 sm:px-4">
+        <ChartContainer config={config} className="aspect-auto h-[240px] w-full">
+          <AreaChart data={data} margin={{ left: 0, right: 8, top: 8 }}>
+            <defs>
+              <linearGradient id="fillCompleted" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-completed)" stopOpacity={0.22} />
+                <stop offset="95%" stopColor="var(--color-completed)" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              minTickGap={28}
+              tickFormatter={(v: string) => format(new Date(v), "MMM d")}
+            />
+            <YAxis tickLine={false} axisLine={false} width={28} allowDecimals={false} />
+            <ChartTooltip
+              cursor
+              content={
+                <ChartTooltipContent
+                  indicator="line"
+                  labelFormatter={(v) => format(new Date(String(v)), "EEE, MMM d")}
+                />
+              }
+            />
+            <Area
+              dataKey="completed"
+              type="monotone"
+              stroke="var(--color-completed)"
+              strokeWidth={2}
+              fill="url(#fillCompleted)"
+              activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--card)" }}
+            />
+          </AreaChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
   );
 }

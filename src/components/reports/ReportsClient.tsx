@@ -1,11 +1,12 @@
 "use client";
 
-import { MdBarChart, MdTrendingUp, MdTrackChanges, MdGroup, MdCheckCircle, MdWarning } from "react-icons/md";
 import { Card, CardHeader, CardTitle, CardBody } from "@/components/ui/Card";
+import { ChartColumnIcon, CircleCheckIcon, TargetIcon, TrendingUpIcon, TriangleAlertIcon, UsersIcon, EyeIcon, CheckIcon } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getProgressPercent } from "@/lib/utils";
 import type { DashboardStats, ProjectWithRelations, TaskWithRelations } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
 interface Props {
   stats: DashboardStats;
@@ -62,10 +63,10 @@ export default function ReportsClient({ stats, projects, tasks }: Props) {
       {/* KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          { icon: MdTrackChanges, label: "Completion Rate",   value: `${stats.totalTasks ? Math.round(((stats.totalTasks - stats.openTasks) / stats.totalTasks) * 100) : 0}%`, color: "bg-tva-success-lt text-tva-success" },
-          { icon: MdTrendingUp,   label: "Active Projects",   value: stats.activeProjects,  color: "bg-tva-info-lt text-tva-info" },
-          { icon: MdGroup,        label: "Team Members",      value: stats.teamSize,         color: "bg-purple-100 text-purple-600" },
-          { icon: MdWarning,      label: "Overdue Tasks",     value: stats.overdueTasks,     color: "bg-tva-error-lt text-tva-error" },
+          { icon: TargetIcon, label: "Completion Rate",   value: `${stats.totalTasks ? Math.round(((stats.totalTasks - stats.openTasks) / stats.totalTasks) * 100) : 0}%`, color: "bg-tva-success-lt text-tva-success" },
+          { icon: TrendingUpIcon,   label: "Active Projects",   value: stats.activeProjects,  color: "bg-tva-info-lt text-tva-info" },
+          { icon: UsersIcon,        label: "Team Members",      value: stats.teamSize,         color: "bg-purple-100 text-purple-600" },
+          { icon: TriangleAlertIcon,      label: "Overdue Tasks",     value: stats.overdueTasks,     color: "bg-tva-error-lt text-tva-error" },
         ].map(({ icon: Icon, label, value, color }) => (
           <div key={label} className={`rounded-20 p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-all ${color.split(" ")[0]}`}>
             <div className={`w-12 h-12 rounded-12 bg-white/60 flex items-center justify-center ${color.split(" ")[1]}`}>
@@ -131,9 +132,7 @@ export default function ReportsClient({ stats, projects, tasks }: Props) {
           <CardBody className="flex flex-col gap-3 p-0">
             {projectHealth.map((p) => (
               <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 border-b border-tva-border/40 last:border-0 hover:bg-tva-red-xlt/30 transition-colors">
-                <div className="flex-shrink-0">
-                  <span className="text-xl">{p.emoji}</span>
-                </div>
+                <ProjectIcon icon={p.emoji} color={p.color} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-tva-ink truncate">{p.name}</span>
@@ -192,7 +191,7 @@ export default function ReportsClient({ stats, projects, tasks }: Props) {
       <Card className="rounded-20 border-tva-border/60">
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold">
-            <span className="flex items-center gap-2"><MdBarChart size={18} /> Workspace Summary</span>
+            <span className="flex items-center gap-2"><ChartColumnIcon size={18} /> Workspace Summary</span>
           </CardTitle>
         </CardHeader>
         <CardBody className="p-0">
@@ -218,7 +217,7 @@ export default function ReportsClient({ stats, projects, tasks }: Props) {
                   <td className="px-6 py-3 text-sm font-medium text-tva-ink">{metric}</td>
                   <td className="px-6 py-3 text-sm font-bold text-tva-ink">{value}</td>
                   <td className="px-6 py-3">
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full ${
                       status === "error" ? "bg-tva-error-lt text-tva-error" :
                       status === "warn"  ? "bg-tva-warn-lt text-tva-warn" :
                       status === "active"? "bg-tva-success-lt text-tva-success" :
@@ -226,7 +225,7 @@ export default function ReportsClient({ stats, projects, tasks }: Props) {
                       status === "ok"    ? "bg-tva-success-lt text-tva-success" :
                       "bg-tva-info-lt text-tva-info"
                     }`}>
-                      {status === "error" ? "⚠ Attention" : status === "warn" ? "Monitor" : status === "ok" || status === "active" ? "✓ Good" : status === "done" ? "Complete" : "—"}
+                      {status === "error" ? <><TriangleAlertIcon className="size-3" aria-hidden /> Attention</> : status === "warn" ? <><EyeIcon className="size-3" aria-hidden /> Monitor</> : status === "ok" || status === "active" ? <><CircleCheckIcon className="size-3" aria-hidden /> Good</> : status === "done" ? <><CheckIcon className="size-3" aria-hidden /> Complete</> : "—"}
                     </span>
                   </td>
                 </tr>

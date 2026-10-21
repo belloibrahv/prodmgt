@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Check, FileText, LayoutGrid, List } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 import { MiniAvatar, SCENE, ScaledStage, people } from "./demo/primitives";
 import { TimelineScene } from "./demo/scenes";
 import Reveal from "./Reveal";
@@ -24,7 +25,7 @@ function ProjectPlanVisual() {
       <div aria-hidden className="absolute -inset-6 rounded-[40px] bg-[radial-gradient(closest-side,rgba(188,0,4,0.16),transparent)] blur-2xl" />
       <div className="relative rounded-24 border border-tva-border/70 bg-white p-6 shadow-lg">
         <div className="flex items-start gap-3.5">
-          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-16 bg-tva-red-xlt text-[22px]">🏢</span>
+          <ProjectIcon icon="building" color="#bc0004" size="lg" />
           <div className="min-w-0 flex-1">
             <p className="text-[16px] font-semibold text-tva-ink">Client Portal</p>
             <p className="truncate text-[13px] text-tva-ink-m">Self-service portal for project status and documents</p>
@@ -188,10 +189,10 @@ function TimelineVisual() {
 /* ── Visual: documents ── */
 
 const docs = [
-  { type: "PRD", tint: "bg-tva-red-lt text-tva-red", title: "Client Portal requirements", project: "🏢 Client Portal", who: 3 },
-  { type: "Spec", tint: "bg-tva-info-lt text-tva-info", title: "API Specification v2", project: "📱 Mobile App v2.0", who: 0 },
-  { type: "Design", tint: "bg-[#ede9fe] text-[#7c3aed]", title: "Portal wireframes v3", project: "🏢 Client Portal", who: 2 },
-  { type: "Meeting notes", tint: "bg-tva-warn-lt text-[#b45309]", title: "Sprint 14 planning", project: "📊 Internal Dashboard", who: 1 },
+  { type: "PRD", tint: "bg-tva-red-lt text-tva-red", title: "Client Portal requirements", project: "Client Portal", icon: "building", color: "#bc0004", who: 3 },
+  { type: "Spec", tint: "bg-tva-info-lt text-tva-info", title: "API Specification v2", project: "Mobile App v2.0", icon: "smartphone", color: "#2563eb", who: 0 },
+  { type: "Design", tint: "bg-[#ede9fe] text-[#7c3aed]", title: "Portal wireframes v3", project: "Client Portal", icon: "building", color: "#bc0004", who: 2 },
+  { type: "Meeting notes", tint: "bg-tva-warn-lt text-[#b45309]", title: "Sprint 14 planning", project: "Internal Dashboard", icon: "chart", color: "#1da851", who: 1 },
 ];
 
 function DocumentsVisual() {
@@ -220,7 +221,7 @@ function DocumentsVisual() {
               <span className="h-1.5 w-3/5 rounded-full bg-tva-surface" />
             </div>
             <div className="mt-4 flex items-center justify-between border-t border-tva-border/40 pt-3.5">
-              <span className="text-[12.5px] text-tva-ink-m">{d.project}</span>
+              <span className="flex items-center gap-1.5 text-[12.5px] text-tva-ink-m"><ProjectIcon icon={d.icon} color={d.color} size="xs" />{d.project}</span>
               <MiniAvatar name={people[d.who].name} color={people[d.who].color} size={24} />
             </div>
           </motion.div>

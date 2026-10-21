@@ -118,11 +118,20 @@ export async function getTeamWorkloadData() {
 
   const users = await prisma.user.findMany({
     where: { id: { in: groups.map((g) => g.assigneeId!) } },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, image: true, jobTitle: true },
   });
-  const byId = new Map(users.map((u) => [u.id, u.name || u.email]));
+  const byId = new Map(users.map((u) => [u.id, u]));
 
   return groups
-    .map((g) => ({ name: byId.get(g.assigneeId!) ?? "Unknown", tasks: g._count._all }))
+    .map((g) => {
+      const u = byId.get(g.assigneeId!);
+      return {
+        id: g.assigneeId!,
+        name: u?.name || u?.email || "Unknown",
+        image: u?.image ?? null,
+        jobTitle: u?.jobTitle ?? null,
+        tasks: g._count._all,
+      };
+    })
     .sort((a, b) => b.tasks - a.tasks);
 }

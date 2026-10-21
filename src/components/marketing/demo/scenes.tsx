@@ -7,6 +7,7 @@ import {
   LayoutGrid, List, CalendarDays, MessageSquare, TrendingUp, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 import { CountUp, Donut, MiniAvatar, people, projects } from "./primitives";
 
 const card = "rounded-16 border border-tva-border/60 bg-white shadow-sm";
@@ -50,7 +51,7 @@ const activity = [
 export function DashboardScene() {
   return (
     <div className="h-full w-full p-6">
-      <SceneHeader title="Welcome back, Akin 👋" subtitle="Here’s what’s happening across your projects" />
+      <SceneHeader title="Welcome back, Akin" subtitle="Here’s what’s happening across your projects" />
 
       <div className="grid grid-cols-4 gap-3.5">
         {stats.map(({ label, value, note, noteClass, icon: Icon, tint }, i) => (
@@ -166,7 +167,7 @@ export function DashboardScene() {
           <ul className="mt-2.5 flex flex-col gap-2.5">
             {projects.map((p, i) => (
               <li key={p.name} className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-8 text-[15px]" style={{ backgroundColor: `${p.color}14` }}>{p.emoji}</span>
+                <ProjectIcon icon={p.emoji} color={p.color} size="sm" />
                 <span className="w-[136px] truncate text-[12px] font-semibold text-tva-ink">{p.name}</span>
                 <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-tva-surface">
                   <motion.span
@@ -353,8 +354,8 @@ export function BoardScene({ autoplay = true }: { autoplay?: boolean }) {
               style={{ width: COL_W - 16, height: CARD_H, zIndex: isHeld ? 20 : 1 }}
             >
               <span className="flex items-center gap-1.5 text-[10.5px] font-medium text-tva-ink-m">
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: project.color }} />
-                {project.emoji} {project.name}
+                <ProjectIcon icon={project.emoji} color={project.color} size="xs" />
+                {project.name}
               </span>
               <span className={cn("line-clamp-2 text-[12px] font-semibold leading-snug text-tva-ink", done && "text-tva-ink-m")}>
                 {task.title}
@@ -424,11 +425,11 @@ const MONTH_W = 110;
 const LABEL_W = 216;
 
 const schedule = [
-  { name: "Client Portal", emoji: "🏢", color: "#bc0004", start: 0, end: 4, progress: 72, milestones: [{ at: 1.5, label: "Design Handoff", done: true }, { at: 3, label: "Beta Launch", done: false }] },
-  { name: "Mobile App v2.0", emoji: "📱", color: "#2563eb", start: 0, end: 2.5, progress: 48, milestones: [{ at: 2.1, label: "Store review", done: false }] },
-  { name: "Website Refresh", emoji: "🌐", color: "#b45309", start: 1, end: 3.4, progress: 60, milestones: [] },
-  { name: "Internal Dashboard", emoji: "📊", color: "#1da851", start: 2, end: 6, progress: 18, milestones: [{ at: 4.6, label: "Pilot", done: false }] },
-  { name: "Billing Integration", emoji: "💳", color: "#7c3aed", start: 3.2, end: 5.6, progress: 0, milestones: [] },
+  { name: "Client Portal", emoji: "building", color: "#bc0004", start: 0, end: 4, progress: 72, milestones: [{ at: 1.5, label: "Design Handoff", done: true }, { at: 3, label: "Beta Launch", done: false }] },
+  { name: "Mobile App v2.0", emoji: "smartphone", color: "#2563eb", start: 0, end: 2.5, progress: 48, milestones: [{ at: 2.1, label: "Store review", done: false }] },
+  { name: "Website Refresh", emoji: "globe", color: "#b45309", start: 1, end: 3.4, progress: 60, milestones: [] },
+  { name: "Internal Dashboard", emoji: "chart", color: "#1da851", start: 2, end: 6, progress: 18, milestones: [{ at: 4.6, label: "Pilot", done: false }] },
+  { name: "Billing Integration", emoji: "payments", color: "#7c3aed", start: 3.2, end: 5.6, progress: 0, milestones: [] },
 ];
 
 const TODAY = 2.3;
@@ -454,7 +455,7 @@ export function TimelineScene() {
         {schedule.map((row, i) => (
           <div key={row.name} className="flex h-[76px] items-center border-b border-tva-border/30 last:border-b-0">
             <div className="flex items-center gap-2.5 px-4" style={{ width: LABEL_W }}>
-              <span className="flex h-8 w-8 items-center justify-center rounded-8 text-[15px]" style={{ backgroundColor: `${row.color}14` }}>{row.emoji}</span>
+              <ProjectIcon icon={row.emoji} color={row.color} size="sm" />
               <span>
                 <span className="block text-[12px] font-semibold text-tva-ink">{row.name}</span>
                 <span className="block text-[10.5px] text-tva-ink-m">{row.progress}% complete</span>
@@ -604,7 +605,7 @@ export function ReportsScene() {
           <ul className="mt-3 flex flex-col gap-3">
             {projects.map((p, i) => (
               <li key={p.name} className="flex items-center gap-3">
-                <span className="text-[14px]">{p.emoji}</span>
+                <ProjectIcon icon={p.emoji} color={p.color} size="xs" />
                 <span className="w-[128px] truncate text-[11.5px] font-semibold text-tva-ink">{p.name}</span>
                 <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-tva-surface">
                   <motion.span

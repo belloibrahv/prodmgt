@@ -1,85 +1,76 @@
-"use client";
+import { AlertTriangle, CheckCircle2, FolderKanban, ListTodo, Users } from "lucide-react";
+import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
+import { cn } from "@/lib/utils";
+import type { DashboardStats as Stats } from "@/types";
 
-import { FolderKanban, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import type { DashboardStats } from "@/types";
-import { motion } from "framer-motion";
+interface Tile {
+  label: string;
+  value: number;
+  icon: typeof FolderKanban;
+  footer: React.ReactNode;
+}
 
-interface Props { stats: DashboardStats }
+export default function DashboardStats({ stats }: { stats: Stats }) {
+  const overdue = stats.overdueTasks > 0;
 
-const cards = [
-  {
-    key: "totalProjects" as const,
-    label: "Total Projects",
-    icon: FolderKanban,
-    bg: "bg-tva-red-lt",
-    color: "text-tva-red",
-    trend: (s: DashboardStats) => `${s.activeProjects} active`,
-    trendColor: "text-tva-success",
-  },
-  {
-    key: "completedProjects" as const,
-    label: "Completed",
-    icon: CheckCircle2,
-    bg: "bg-tva-success-lt",
-    color: "text-tva-success",
-    trend: () => "On track",
-    trendColor: "text-tva-success",
-  },
-  {
-    key: "openTasks" as const,
-    label: "Open Tasks",
-    icon: Clock,
-    bg: "bg-tva-info-lt",
-    color: "text-tva-info",
-    trend: (s: DashboardStats) => `${s.totalTasks} total`,
-    trendColor: "text-tva-ink-m",
-  },
-  {
-    key: "overdueTasks" as const,
-    label: "Overdue Tasks",
-    icon: AlertTriangle,
-    bg: "bg-tva-error-lt",
-    color: "text-tva-error",
-    trend: (s: DashboardStats) => s.overdueTasks > 0 ? "Needs attention" : "All good",
-    trendColor: (s: DashboardStats) => s.overdueTasks > 0 ? "text-tva-error" : "text-tva-success",
-  },
-];
+  const tiles: Tile[] = [
+    {
+      label: "Active projects",
+      value: stats.activeProjects,
+      icon: FolderKanban,
+      footer: <>{stats.totalProjects} total · {stats.completedProjects} completed</>,
+    },
+    {
+      label: "Open tasks",
+      value: stats.openTasks,
+      icon: ListTodo,
+      footer: <>{stats.totalTasks} tasks across all projects</>,
+    },
+    {
+      label: "Overdue tasks",
+      value: stats.overdueTasks,
+      icon: AlertTriangle,
+      footer: overdue ? (
+        <span className="inline-flex items-center gap-1.5 font-medium text-destructive">
+          <AlertTriangle className="size-3.5" /> Needs attention
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 font-medium text-success">
+          <CheckCircle2 className="size-3.5" /> Nothing overdue
+        </span>
+      ),
+    },
+    {
+      label: "Team members",
+      value: stats.teamSize,
+      icon: Users,
+      footer: <>People with access to this workspace</>,
+    },
+  ];
 
-export default function DashboardStats({ stats }: Props) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map(({ key, label, icon: Icon, bg, color, trend, trendColor }, index) => {
-        const tc = typeof trendColor === "function" ? trendColor(stats) : trendColor;
-        return (
-          <motion.div
-            key={key}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="bg-white border border-tva-border/60 rounded-20 p-6 flex items-start gap-4 shadow-sm hover:shadow-lg hover:border-tva-red/30 transition-all duration-300 hover:-translate-y-1"
-          >
-            <motion.div 
-              className={`w-11 h-11 rounded-12 ${bg} ${color} flex items-center justify-center flex-shrink-0`}
-              whileHover={{ scale: 1.1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 10 }}
-            >
-              <Icon size={22} />
-            </motion.div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[12px] font-medium text-tva-ink-m">{label}</span>
-              <motion.span 
-                className="text-3xl font-bold text-tva-ink leading-tight"
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.3, delay: index * 0.1 + 0.2 }}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {tiles.map(({ label, value, icon: Icon, footer }) => (
+        <Card key={label} className="gap-3 pb-0 shadow-xs">
+          <CardHeader>
+            <CardDescription className="font-medium">{label}</CardDescription>
+            <CardTitle className="text-3xl font-semibold tracking-tight tabular-nums">{value}</CardTitle>
+            <CardAction>
+              <span
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground",
+                  label === "Overdue tasks" && overdue && "bg-destructive/10 text-destructive",
+                )}
               >
-                {stats[key]}
-              </motion.span>
-              <span className={`text-[11px] font-medium mt-0.5 ${tc}`}>{trend(stats)}</span>
-            </div>
-          </motion.div>
-        );
-      })}
+                <Icon className="size-4.5" aria-hidden />
+              </span>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="border-t bg-muted/40 py-2.5 text-xs text-muted-foreground">
+            {footer}
+          </CardFooter>
+        </Card>
+      ))}
     </div>
   );
 }

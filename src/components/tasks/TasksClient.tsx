@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MdAdd, MdGridOn, MdViewList, MdCheckCircle } from "react-icons/md";
-import { Search, X } from "lucide-react";
+import { Search, X, CircleCheckIcon, LayoutGridIcon, ListIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useWorkspace } from "@/components/layout/AppShell";
@@ -71,7 +70,7 @@ export default function TasksClient({ tasks, projects }: Props) {
             </p>
           </div>
           <Button onClick={() => setModal({ status: "TODO" })} size="lg" className="gap-2 rounded-full px-5">
-            <MdAdd size={18} /> Add task
+            <PlusIcon size={18} /> Add task
           </Button>
         </div>
 
@@ -102,7 +101,7 @@ export default function TasksClient({ tasks, projects }: Props) {
 
           <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className={selectClass} style={chevron} aria-label="Filter by project">
             <option value="all">All projects</option>
-            {projects.map((p) => <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>)}
+            {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
 
           <label className="flex min-w-[180px] flex-1 items-center gap-2 rounded-full border border-tva-border/60 bg-white px-4 py-2.5 focus-within:border-tva-red sm:max-w-xs">
@@ -127,17 +126,17 @@ export default function TasksClient({ tasks, projects }: Props) {
 
           <div className="ml-auto flex bg-white border border-tva-border/60 rounded-12 p-1 gap-1">
             <button onClick={() => setView("kanban")} className={cn("p-2 rounded-8 transition-all duration-200", view === "kanban" ? "bg-tva-red text-white shadow-sm" : "text-tva-ink-m hover:text-tva-red hover:bg-tva-red-xlt")} aria-label="Board view" aria-pressed={view === "kanban"}>
-              <MdGridOn size={18} />
+              <LayoutGridIcon size={18} />
             </button>
             <button onClick={() => setView("table")} className={cn("p-2 rounded-8 transition-all duration-200", view === "table" ? "bg-tva-red text-white shadow-sm" : "text-tva-ink-m hover:text-tva-red hover:bg-tva-red-xlt")} aria-label="Table view" aria-pressed={view === "table"}>
-              <MdViewList size={18} />
+              <ListIcon size={18} />
             </button>
           </div>
         </div>
 
         {tasks.length === 0 ? (
           <EmptyState
-            icon={<MdCheckCircle size={48} />}
+            icon={<CircleCheckIcon size={48} />}
             title={projects.length === 0 ? "Create a project first" : "No tasks yet"}
             description={projects.length === 0 ? "Tasks live inside projects. Use New Project at the top to start one." : "Create your first task to start tracking work."}
             action={projects.length > 0 ? { label: "Add task", onClick: () => setModal({ status: "TODO" }) } : undefined}

@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { MdAdd, MdDescription } from "react-icons/md";
+import { FileTextIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import ProjectDocuments from "./ProjectDocuments";
 import NewDocumentModal from "./NewDocumentModal";
 import type { DocumentWithRelations } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
-interface ProjectOption { id: string; name: string; emoji: string }
+interface ProjectOption { id: string; name: string; emoji: string; color: string }
 
 interface Props {
   documents: DocumentWithRelations[];
@@ -68,7 +69,7 @@ export default function DocumentsClient({ documents, projects = [] }: Props) {
           >
             <option value="all">All Projects</option>
             {docProjects.map((p) => (
-              <option key={p.id} value={p.id}>{p.emoji} {p.name}</option>
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
 
@@ -86,14 +87,14 @@ export default function DocumentsClient({ documents, projects = [] }: Props) {
           </select>
 
           <Button onClick={() => handleNewDoc()} className="gap-2 bg-tva-red text-white hover:bg-tva-red-dk">
-            <MdAdd size={18} /> New Document
+            <PlusIcon size={18} /> New Document
           </Button>
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<MdDescription size={48} />}
+          icon={<FileTextIcon size={48} />}
           title="No documents found"
           description="Create PRDs, specs, meeting notes, and more."
           action={{ label: "New Document", onClick: () => handleNewDoc(), className: "bg-tva-red text-white hover:bg-tva-red-dk" }}
@@ -114,7 +115,7 @@ export default function DocumentsClient({ documents, projects = [] }: Props) {
                   onClick={() => { setSelectedProjectId(p.id); }}
                   className="flex items-center gap-3 p-3 rounded-12 hover:bg-tva-surface transition-colors text-left"
                 >
-                  <span className="text-xl">{p.emoji}</span>
+                  <ProjectIcon icon={p.emoji} color={p.color} size="sm" />
                   <span className="text-sm font-medium text-tva-ink">{p.name}</span>
                 </button>
               ))}

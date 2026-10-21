@@ -1,76 +1,70 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import { ArrowRight, CalendarDays, FolderKanban } from "lucide-react";
+import { AvatarGroup } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { getProgressPercent } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
+import { formatDate, getProgressPercent } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
 
 export default function ActiveProjects({ projects }: { projects: ProjectWithRelations[] }) {
   return (
-    <Card className="shadow-sm hover:shadow-lg transition-all duration-300 border-tva-border/60 rounded-20 overflow-hidden">
-      <CardHeader className="pb-4 px-6 pt-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">Active Projects</CardTitle>
-          <Link 
-            href="/projects" 
-            className="text-xs font-medium text-tva-red hover:text-tva-red-dk flex items-center gap-1 transition-all duration-200 hover:gap-2"
-          >
-            View all <ArrowRight size={12} />
-          </Link>
-        </div>
+    <Card className="shadow-xs">
+      <CardHeader>
+        <CardTitle>Active projects</CardTitle>
+        <CardDescription>Progress by completed tasks</CardDescription>
+        <CardAction>
+          <Button variant="ghost" size="sm" render={<Link href="/projects" />} nativeButton={false}>
+            All projects <ArrowRight data-icon="inline-end" />
+          </Button>
+        </CardAction>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="px-0">
         {projects.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <div className="flex justify-center mb-3">
-              <span className="text-4xl">📁</span>
-            </div>
-            <p className="text-sm text-tva-ink-m font-medium">No active projects yet.</p>
-          </div>
+          <Empty className="border-0 py-10">
+            <EmptyHeader>
+              <EmptyMedia variant="icon"><FolderKanban /></EmptyMedia>
+              <EmptyTitle>No active projects</EmptyTitle>
+              <EmptyDescription>Projects you mark as active will show up here.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
-          <ul className="divide-y divide-tva-border/30">
-            {projects.map((p, index) => {
-              const completed = p.tasks.filter(t => t.status === "DONE").length;
-              const pct = getProgressPercent(completed, p.tasks.length);
+          <ul className="divide-y">
+            {projects.map((p) => {
+              const done = p.tasks.filter((t) => t.status === "DONE").length;
+              const pct = getProgressPercent(done, p.tasks.length);
               return (
-                <motion.li 
-                  key={p.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                >
+                <li key={p.id}>
                   <Link
                     href={`/projects/${p.id}`}
-                    className="flex items-center gap-4 px-6 py-4.5 hover:bg-gradient-to-r hover:from-tva-red-xlt hover:to-transparent transition-all duration-200 group border-b border-tva-border/30 last:border-0"
+                    className="group grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-3.5 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:grid-cols-[auto_minmax(0,1fr)_minmax(0,180px)_auto]"
                   >
-                    {/* Color indicator */}
-                    <div 
-                      className="w-2.5 h-16 rounded-full flex-shrink-0 shadow-sm"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    {/* Icon + info */}
-                    <div className="flex-shrink-0 drop-shadow-sm">
-                      <span className="text-3xl">{p.emoji}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-tva-ink truncate group-hover:text-tva-red transition-colors leading-tight">
-                        {p.name}
+                    <ProjectIcon icon={p.emoji} color={p.color} />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium group-hover:text-primary">{p.name}</p>
+                      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarDays className="size-3.5" aria-hidden />
+                        {p.dueDate ? `Due ${formatDate(p.dueDate)}` : "No due date"}
+                        <span aria-hidden>·</span>
+                        {done}/{p.tasks.length} tasks
                       </p>
-                      <div className="mt-3 flex items-center gap-3">
-                        <ProgressBar value={pct} className="flex-1 h-2" />
-                        <span className="text-xs font-semibold text-tva-ink-m w-10 text-right">{pct}%</span>
-                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0 ml-3">
+                    <div className="col-span-3 col-start-1 flex items-center gap-2 sm:col-span-1 sm:col-start-auto">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${p.name} progress`}>
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: p.color }} />
+                      </div>
+                      <span className="w-9 text-right text-xs font-medium tabular-nums">{pct}%</span>
+                    </div>
+                    <div className="col-start-3 row-start-1 flex items-center gap-3 sm:col-start-auto">
+                      <div className="hidden lg:block">
+                        <AvatarGroup users={p.members.map((m) => m.user)} max={3} />
+                      </div>
                       <StatusBadge status={p.status} />
-                      <span className="text-xs text-tva-ink-m font-medium">{p._count.tasks} tasks</span>
                     </div>
                   </Link>
-                </motion.li>
+                </li>
               );
             })}
           </ul>

@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getWorkspaceMembers } from "@/lib/actions/team";
@@ -11,10 +12,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const members = await getWorkspaceMembers();
+  const [members, cookieStore] = await Promise.all([getWorkspaceMembers(), cookies()]);
+  // Set by the shadcn sidebar when it is toggled.
+  const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
-    <AppShell user={session.user} members={members}>
+    <AppShell user={session.user} members={members} sidebarOpen={sidebarOpen}>
       {children}
     </AppShell>
   );

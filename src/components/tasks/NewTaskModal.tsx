@@ -120,7 +120,7 @@ export default function NewTaskModal({
             label="Project"
             value={chosenProject}
             onChange={(e) => setChosenProject(e.target.value)}
-            options={projects.map((p) => ({ value: p.id, label: `${p.emoji} ${p.name}` }))}
+            options={projects.map((p) => ({ value: p.id, label: p.name }))}
           />
         )}
 

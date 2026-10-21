@@ -17,9 +17,9 @@ export const people = [
 ];
 
 export const projects = [
-  { name: "Client Portal", emoji: "🏢", color: "#bc0004", progress: 72, status: "Active", due: "Sep 30" },
-  { name: "Mobile App v2.0", emoji: "📱", color: "#2563eb", progress: 48, status: "Active", due: "Aug 15" },
-  { name: "Internal Dashboard", emoji: "📊", color: "#1da851", progress: 18, status: "Planning", due: "Nov 30" },
+  { name: "Client Portal", emoji: "building", color: "#bc0004", progress: 72, status: "Active", due: "Sep 30" },
+  { name: "Mobile App v2.0", emoji: "smartphone", color: "#2563eb", progress: 48, status: "Active", due: "Aug 15" },
+  { name: "Internal Dashboard", emoji: "chart", color: "#1da851", progress: 18, status: "Planning", due: "Nov 30" },
 ];
 
 /**

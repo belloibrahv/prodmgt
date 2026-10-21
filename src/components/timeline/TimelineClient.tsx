@@ -1,11 +1,12 @@
 "use client";
 
-import { MdDateRange } from "react-icons/md";
 import { differenceInDays, format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isWeekend } from "date-fns";
+import { CalendarRangeIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate, cn } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
 export default function TimelineClient({ projects }: { projects: ProjectWithRelations[] }) {
   const active = projects.filter((p) => p.status !== "COMPLETED" && p.status !== "CANCELLED" && p.startDate && p.dueDate);
@@ -18,7 +19,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
           <p className="text-sm text-tva-ink-m mt-1">Project schedules and milestones</p>
         </div>
         <EmptyState
-          icon={<MdDateRange size={48} />}
+          icon={<CalendarRangeIcon size={48} />}
           title="No active projects with dates"
           description="Set start and due dates on your projects to see them on the timeline."
         />
@@ -121,9 +122,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
                 <div key={project.id} className="flex items-center border-b border-tva-border/40 hover:bg-tva-red-xlt/50 transition-colors group">
                   {/* Label */}
                   <div className="w-52 min-w-[208px] flex-shrink-0 px-4 py-4 border-r border-tva-border/40 flex items-center gap-2">
-                    <div className="flex-shrink-0">
-                      <span className="text-xl">{project.emoji}</span>
-                    </div>
+                    <ProjectIcon icon={project.emoji} color={project.color} size="sm" />
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-tva-ink truncate group-hover:text-tva-red transition-colors">
                         {project.name}

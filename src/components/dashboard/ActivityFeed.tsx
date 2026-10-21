@@ -1,56 +1,52 @@
-"use client";
-
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { Avatar } from "@/components/ui/Avatar";
-import { formatRelative } from "@/lib/utils";
-import { motion } from "framer-motion";
 import { Activity } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { formatRelative } from "@/lib/utils";
 import type { ActivityWithRelations } from "@/types";
 
 export default function ActivityFeed({ activity }: { activity: ActivityWithRelations[] }) {
   return (
-    <Card className="shadow-sm hover:shadow-lg transition-all duration-300 border-tva-border/60 rounded-20 overflow-hidden">
-      <CardHeader className="pb-4 px-6 pt-6">
-        <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
+    <Card className="shadow-xs">
+      <CardHeader>
+        <CardTitle>Recent activity</CardTitle>
+        <CardDescription>What your team has been up to</CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="px-0">
         {activity.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <div className="flex justify-center mb-3">
-              <Activity size={48} className="text-tva-ink-m" />
-            </div>
-            <p className="text-sm text-tva-ink-m font-medium">No recent activity.</p>
-          </div>
+          <Empty className="border-0 py-10">
+            <EmptyHeader>
+              <EmptyMedia variant="icon"><Activity /></EmptyMedia>
+              <EmptyTitle>No activity yet</EmptyTitle>
+              <EmptyDescription>Updates to projects and tasks will appear here.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
-          <ul className="divide-y divide-tva-border/30">
-            {activity.map((item, index) => (
-              <motion.li 
-                key={item.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: index * 0.05 }}
-                className="flex items-start gap-3 px-6 py-4.5 hover:bg-gradient-to-r hover:from-tva-red-xlt hover:to-transparent transition-all duration-200 group border-b border-tva-border/30 last:border-0"
-              >
-                <div className="relative flex-shrink-0">
-                  <Avatar name={item.user.name} image={item.user.image} size="sm" className="mt-0.5" />
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-tva-success rounded-full border-2 border-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-tva-ink leading-relaxed">
-                    <span className="font-semibold text-tva-ink">{item.user.name?.split(" ")[0]}</span>{" "}
-                    <span className="text-tva-ink-m">{item.action}</span>
-                    {item.detail && (
-                      <span className="font-medium text-tva-red bg-tva-red-xlt px-1.5 py-0.5 rounded-4 ml-1">&quot;{item.detail}&quot;</span>
-                    )}
-                    {item.project && (
-                      <span className="text-tva-ink-m"> in <span className="font-medium text-tva-ink">{item.project.name}</span></span>
-                    )}
-                  </p>
-                  <p className="text-xs text-tva-ink-m mt-2 font-medium">{formatRelative(item.createdAt)}</p>
-                </div>
-              </motion.li>
-            ))}
-          </ul>
+          <ScrollArea className="h-[360px]">
+            <ol className="relative px-4">
+              {activity.map((item, i) => (
+                <li key={item.id} className="relative flex gap-3 pb-5 last:pb-1">
+                  {/* Timeline connector */}
+                  {i < activity.length - 1 && (
+                    <span className="absolute top-8 bottom-0 left-[11px] w-px bg-border" aria-hidden />
+                  )}
+                  <Avatar name={item.user.name} image={item.user.image} size="xs" className="mt-0.5" />
+                  <div className="min-w-0 flex-1 text-sm">
+                    <p className="leading-snug text-muted-foreground">
+                      <span className="font-medium text-foreground">{item.user.name?.split(" ")[0] ?? "Someone"}</span>{" "}
+                      {item.action}
+                      {item.detail && <span className="font-medium text-foreground"> “{item.detail}”</span>}
+                      {item.project && <> in <span className="font-medium text-foreground">{item.project.name}</span></>}
+                    </p>
+                    <time dateTime={new Date(item.createdAt).toISOString()} className="mt-0.5 block text-xs text-muted-foreground">
+                      {formatRelative(item.createdAt)}
+                    </time>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>

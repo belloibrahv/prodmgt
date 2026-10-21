@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Send, Trash2 } from "lucide-react";
+import { Send, Trash2, Flag } from "lucide-react";
 import toast from "react-hot-toast";
 import { Modal } from "@/components/ui/Modal";
 import { Avatar } from "@/components/ui/Avatar";
@@ -70,7 +70,7 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
   if (task.assignee && !members.some((m) => m.id === task.assignee!.id)) assigneeOptions.push(task.assignee);
 
   return (
-    <Modal open={open} onClose={onClose} title={task.project ? `${task.project.emoji} ${task.project.name}` : "Task"} size="lg">
+    <Modal open={open} onClose={onClose} title={task.project?.name ?? "Task"} size="lg">
       <div className="flex flex-col gap-5">
         {/* Title & description, saved on blur */}
         <div className="flex flex-col gap-2">
@@ -135,7 +135,9 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
         </div>
 
         {task.milestone && (
-          <p className="text-[12px] font-semibold text-tva-info">🏁 Milestone: {task.milestone.name}</p>
+          <p className="flex items-center gap-1.5 text-[12px] font-semibold text-tva-info">
+            <Flag className="size-3.5" aria-hidden /> Milestone: {task.milestone.name}
+          </p>
         )}
 
         {/* Comments */}

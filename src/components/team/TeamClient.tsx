@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MdAdd, MdGroup, MdEmail, MdWork, MdAssignment } from "react-icons/md";
+import { BriefcaseIcon, ClipboardListIcon, MailIcon, PlusIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -56,14 +56,14 @@ export default function TeamClient({ members }: { members: TeamMember[] }) {
             />
           </div>
           <Button className="gap-2" onClick={() => setShowInviteModal(true)}>
-            <MdAdd size={18} /> Invite Member
+            <PlusIcon size={18} /> Invite Member
           </Button>
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<MdGroup size={48} />}
+          icon={<UsersIcon size={48} />}
           title="No members found"
           description="Invite your team members to collaborate."
         />
@@ -140,13 +140,13 @@ function MemberCard({ member }: { member: TeamMember }) {
       {/* Actions */}
       <div className="border-t border-tva-border/40 pt-4 flex justify-center gap-2">
         <button className="flex items-center gap-1.5 text-xs font-medium text-tva-ink-m hover:text-tva-red transition-colors px-3 py-2 rounded-8 hover:bg-tva-red-xlt">
-          <MdEmail size={14} /> Message
+          <MailIcon size={14} /> Message
         </button>
         <button className="flex items-center gap-1.5 text-xs font-medium text-tva-ink-m hover:text-tva-red transition-colors px-3 py-2 rounded-8 hover:bg-tva-red-xlt">
-          <MdAssignment size={14} /> Tasks
+          <ClipboardListIcon size={14} /> Tasks
         </button>
         <button className="flex items-center gap-1.5 text-xs font-medium text-tva-ink-m hover:text-tva-red transition-colors px-3 py-2 rounded-8 hover:bg-tva-red-xlt">
-          <MdWork size={14} /> Profile
+          <BriefcaseIcon size={14} /> Profile
         </button>
       </div>
     </div>

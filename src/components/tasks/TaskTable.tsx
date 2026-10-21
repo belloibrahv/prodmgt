@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { getDueLabel, formatDate, cn } from "@/lib/utils";
 import TaskDetailModal from "./TaskDetailModal";
 import type { TaskWithRelations } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
 const PRIORITY_RANK: Record<string, number> = { LOW: 0, MEDIUM: 1, HIGH: 2, CRITICAL: 3 };
 const STATUS_RANK: Record<string, number> = { BACKLOG: 0, TODO: 1, IN_PROGRESS: 2, IN_REVIEW: 3, BLOCKED: 4, DONE: 5 };
@@ -16,7 +17,7 @@ type SortKey = "title" | "status" | "priority" | "dueDate" | "assignee";
 interface TaskTableProps {
   tasks: TaskWithRelations[];
   /** When rendering inside a project detail, pass the project to avoid requiring task.project relation */
-  project?: { emoji: string; name: string };
+  project?: { emoji: string; name: string; color?: string };
 }
 
 export default function TaskTable({ tasks, project: projectProp }: TaskTableProps) {
@@ -106,7 +107,8 @@ export default function TaskTable({ tasks, project: projectProp }: TaskTableProp
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-[12px] text-tva-ink-m flex items-center gap-1">
-                        {(projectProp ?? task.project)?.emoji} {(projectProp ?? task.project)?.name}
+                        <ProjectIcon icon={(projectProp ?? task.project)?.emoji} color={(projectProp ?? task.project)?.color} size="xs" />
+                        {(projectProp ?? task.project)?.name}
                       </span>
                     </td>
                   </tr>

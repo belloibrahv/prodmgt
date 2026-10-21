@@ -32,7 +32,7 @@ export default async function DocumentsPage() {
           { members: { some: { userId: session.user.id } } },
         ],
       },
-      select: { id: true, name: true, emoji: true },
+      select: { id: true, name: true, emoji: true, color: true },
       orderBy: { name: "asc" },
     }),
   ]);

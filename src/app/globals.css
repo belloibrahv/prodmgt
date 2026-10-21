@@ -1,119 +1,141 @@
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-@layer base {
-  :root {
-    --font-roboto: 'Roboto', Arial, sans-serif;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-  }
+/* Brand palette (tva-*), radii and shadows still live in the JS config. */
+@config "../../tailwind.config.ts";
 
-  html, body {
-    @apply h-full bg-tva-surface text-tva-ink;
-    font-family: var(--font-roboto);
-    -webkit-font-smoothing: antialiased;
-  }
+@custom-variant dark (&:is(.dark *));
 
-  * {
-    box-sizing: border-box;
-    @apply border-tva-border;
-  }
+/* ── Design tokens ──────────────────────────────────────────
+   shadcn semantic tokens mapped onto the TechVaults brand. */
+:root {
+  --background: #faf7f7;
+  --foreground: #201a1a;
+  --card: #ffffff;
+  --card-foreground: #201a1a;
+  --popover: #ffffff;
+  --popover-foreground: #201a1a;
+  --primary: #bc0004;
+  --primary-foreground: #ffffff;
+  --secondary: #f5efef;
+  --secondary-foreground: #201a1a;
+  --muted: #f5efef;
+  --muted-foreground: #6b5a5a;
+  --accent: #fbeeed;
+  --accent-foreground: #8f0003;
+  --destructive: #d92d20;
+  --success: #12a150;
+  --warning: #d97706;
+  --info: #2563eb;
+  --border: #eadfdf;
+  --input: #e3d6d6;
+  --ring: #bc0004;
+  --radius: 0.75rem;
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { @apply bg-tva-border rounded-full; }
-  ::-webkit-scrollbar-thumb:hover { @apply bg-tva-ink-m; }
-  .theme {
-    --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
-  }
-  .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
-  }
-  body {
-    @apply bg-tva-surface text-tva-ink;
-  }
-  html {
-    @apply font-sans;
-  }
-  /* Smooth in-page anchor scrolling on the marketing homepage only */
-  @media (prefers-reduced-motion: no-preference) {
-    html:has(#tva-marketing) { scroll-behavior: smooth; }
-  }
+  --chart-1: #bc0004;
+  --chart-2: #2563eb;
+  --chart-3: #12a150;
+  --chart-4: #d97706;
+  --chart-5: #7c3aed;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3d3131;
+  --sidebar-primary: #bc0004;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fbeeed;
+  --sidebar-accent-foreground: #8f0003;
+  --sidebar-border: #f0e7e7;
+  --sidebar-ring: #bc0004;
 }
 
-@layer components {
-  /* ── Animations ── */
-  .animate-fade-in {
-    animation: fadeIn 0.2s ease forwards;
-  }
-  .animate-slide-up {
-    animation: slideUp 0.22s ease forwards;
-  }
+.dark {
+  --background: #141010;
+  --foreground: #f6eeee;
+  --card: #1c1717;
+  --card-foreground: #f6eeee;
+  --popover: #1c1717;
+  --popover-foreground: #f6eeee;
+  --primary: #ff4d4f;
+  --primary-foreground: #1c0000;
+  --secondary: #2a2222;
+  --secondary-foreground: #f6eeee;
+  --muted: #2a2222;
+  --muted-foreground: #b3a3a3;
+  --accent: #3a1d1d;
+  --accent-foreground: #ffd6d4;
+  --destructive: #ff6b5e;
+  --success: #3ccf7f;
+  --warning: #f5b544;
+  --info: #6b9cff;
+  --border: rgb(255 255 255 / 0.09);
+  --input: rgb(255 255 255 / 0.14);
+  --ring: #ff4d4f;
+
+  --chart-1: #ff4d4f;
+  --chart-2: #6b9cff;
+  --chart-3: #3ccf7f;
+  --chart-4: #f5b544;
+  --chart-5: #a78bfa;
+
+  --sidebar: #1c1717;
+  --sidebar-foreground: #e9dede;
+  --sidebar-primary: #ff4d4f;
+  --sidebar-primary-foreground: #1c0000;
+  --sidebar-accent: #2a2222;
+  --sidebar-accent-foreground: #f6eeee;
+  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-ring: #ff4d4f;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+
+  --animate-fade-in: fadeIn 0.2s ease forwards;
+  --animate-slide-up: slideUp 0.22s ease forwards;
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(6px); }
@@ -122,5 +144,33 @@
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(14px) scale(0.97); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before {
+    @apply border-border outline-ring/50;
+  }
+
+  html, body {
+    @apply h-full bg-background font-sans text-foreground antialiased;
+  }
+
+  /* Tailwind v4 dropped the pointer cursor on buttons; keep v3 behaviour. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply rounded-full bg-border; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
+
+  /* Smooth in-page anchor scrolling on the marketing homepage only */
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(#tva-marketing) { scroll-behavior: smooth; }
   }
 }

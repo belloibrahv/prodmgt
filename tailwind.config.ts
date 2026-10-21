@@ -20,7 +20,7 @@ const config: Config = {
           "ink-m":   "#6b4f4f",
           surface:   "#f7f2f2",
           "surface-0":"#ffffff",
-          border:    "#ddc8c8",
+          border:    "#eadfdf",
           success:   "#1da851",
           "success-lt":"#d4f5e2",
           warn:      "#f59e0b",
@@ -31,9 +31,6 @@ const config: Config = {
           "info-lt": "#dbeafe",
           online:    "#69f0ae",
         },
-      },
-      fontFamily: {
-        sans: ["var(--font-roboto)", "Roboto", "Arial", "sans-serif"],
       },
       borderRadius: {
         "4":  "4px",

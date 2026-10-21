@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
-import Topbar from "@/components/layout/Topbar";
+import { createContext, useContext } from "react";
+import AppSidebar from "@/components/layout/Sidebar";
+import SiteHeader from "@/components/layout/Topbar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import type { WorkspaceMember } from "@/types";
 
 interface Workspace {
@@ -21,27 +21,23 @@ export function useWorkspace() {
 interface Props {
   user: { id?: string; name?: string | null; email?: string | null; image?: string | null };
   members: WorkspaceMember[];
+  /** Sidebar expanded state, read from its cookie on the server so it doesn't flash. */
+  sidebarOpen: boolean;
   children: React.ReactNode;
 }
 
-export default function AppShell({ user, members, children }: Props) {
-  const [navOpen, setNavOpen] = useState(false);
-  const pathname = usePathname();
-
-  // Close the mobile drawer after navigating.
-  useEffect(() => setNavOpen(false), [pathname]);
-
+export default function AppShell({ user, members, sidebarOpen, children }: Props) {
   return (
     <WorkspaceContext.Provider value={{ members, currentUserId: user.id ?? "" }}>
-      <div className="flex h-screen overflow-hidden bg-tva-surface">
-        <Sidebar mobileOpen={navOpen} onMobileClose={() => setNavOpen(false)} />
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <Topbar user={user} onOpenNav={() => setNavOpen(true)} />
-          <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
-            <div className="mx-auto max-w-[1600px] animate-fade-in">{children}</div>
+      <SidebarProvider defaultOpen={sidebarOpen}>
+        <AppSidebar user={user} />
+        <SidebarInset className="min-w-0">
+          <SiteHeader />
+          <main className="flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1440px] animate-fade-in">{children}</div>
           </main>
-        </div>
-      </div>
+        </SidebarInset>
+      </SidebarProvider>
     </WorkspaceContext.Provider>
   );
 }

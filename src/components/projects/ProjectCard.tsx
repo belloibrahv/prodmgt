@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { MdCalendarToday, MdAssignment, MdPeople, MdDescription } from "react-icons/md";
+import { CalendarIcon, ClipboardListIcon, FileTextIcon, UsersIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { AvatarGroup } from "@/components/ui/Avatar";
 import { StatusBadge, PriorityBadge } from "@/components/ui/StatusBadge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { formatDate, getProgressPercent } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
 interface Props { project: ProjectWithRelations; listView?: boolean }
 
@@ -26,9 +27,7 @@ export default function ProjectCard({ project: p, listView }: Props) {
         className="bg-white border border-tva-border/60 rounded-20 px-5 py-4 flex items-center gap-5 cursor-pointer hover:shadow-lg hover:border-tva-red/40 transition-all group"
         style={{ borderLeft: `4px solid ${p.color}` }}
       >
-        <div className="flex-shrink-0 drop-shadow-sm">
-          <span className="text-3xl">{p.emoji}</span>
-        </div>
+        <ProjectIcon icon={p.emoji} color={p.color} />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-tva-ink group-hover:text-tva-red transition-colors truncate">{p.name}</p>
           <p className="text-xs text-tva-ink-m truncate">{p.description}</p>
@@ -37,7 +36,7 @@ export default function ProjectCard({ project: p, listView }: Props) {
           <StatusBadge status={p.status} />
           <PriorityBadge priority={p.priority} />
           <div className="flex items-center gap-1.5 text-xs text-tva-ink-m font-medium">
-            <MdAssignment size={14} /> {p._count.tasks}
+            <ClipboardListIcon size={14} /> {p._count.tasks}
           </div>
           <div className="w-24">
             <ProgressBar value={pct} showLabel />
@@ -62,9 +61,7 @@ export default function ProjectCard({ project: p, listView }: Props) {
       <div className="p-5 flex flex-col gap-3 flex-1">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
-          <div className="drop-shadow-sm">
-            <span className="text-3xl">{p.emoji}</span>
-          </div>
+          <ProjectIcon icon={p.emoji} color={p.color} size="lg" />
           <StatusBadge status={p.status} />
         </div>
 
@@ -78,9 +75,9 @@ export default function ProjectCard({ project: p, listView }: Props) {
 
         {/* Stats row */}
         <div className="flex gap-4 text-xs text-tva-ink-m">
-          <span className="flex items-center gap-1.5 font-medium"><MdAssignment size={14} />{p._count.tasks} tasks</span>
-          <span className="flex items-center gap-1.5 font-medium"><MdDescription size={14} />{p._count.documents} docs</span>
-          <span className="flex items-center gap-1.5 font-medium"><MdPeople size={14} />{p._count.members}</span>
+          <span className="flex items-center gap-1.5 font-medium"><ClipboardListIcon size={14} />{p._count.tasks} tasks</span>
+          <span className="flex items-center gap-1.5 font-medium"><FileTextIcon size={14} />{p._count.documents} docs</span>
+          <span className="flex items-center gap-1.5 font-medium"><UsersIcon size={14} />{p._count.members}</span>
         </div>
 
         {/* Progress */}
@@ -97,7 +94,7 @@ export default function ProjectCard({ project: p, listView }: Props) {
         <AvatarGroup users={members} max={3} />
         {p.dueDate && (
           <span className="flex items-center gap-1.5 text-xs text-tva-ink-m font-medium">
-            <MdCalendarToday size={13} /> {formatDate(p.dueDate)}
+            <CalendarIcon size={13} /> {formatDate(p.dueDate)}
           </span>
         )}
         <PriorityBadge priority={p.priority} />

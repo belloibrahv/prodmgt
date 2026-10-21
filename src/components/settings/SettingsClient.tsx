@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import toast from "react-hot-toast";
-import { User, Bell, Shield, Palette, Globe } from "lucide-react";
+import { User, Bell, Shield, Palette, Globe, Sun, Moon, Monitor } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -327,17 +327,17 @@ function AppearanceSection({ user }: { user: UserData }) {
         <div>
           <p className="text-[13px] font-semibold text-tva-ink mb-3">Theme</p>
           <div className="flex gap-3">
-            {[{ id: "light" as const, label: "Light" }, { id: "dark" as const, label: "Dark" }, { id: "system" as const, label: "System" }].map(({ id, label }) => (
+            {[{ id: "light" as const, label: "Light", icon: Sun }, { id: "dark" as const, label: "Dark", icon: Moon }, { id: "system" as const, label: "System", icon: Monitor }].map(({ id, label, icon: ThemeIcon }) => (
               <button
                 key={id}
                 type="button"
                 className={cn(
-                  "flex-1 py-3 rounded-12 border text-[13px] font-medium transition-all",
+                  "flex flex-1 items-center justify-center gap-2 py-3 rounded-12 border text-[13px] font-medium transition-all",
                   theme === id ? "border-tva-red bg-tva-red-lt text-tva-red" : "border-tva-border text-tva-ink-m hover:border-tva-red hover:text-tva-red",
                 )}
                 onClick={() => setTheme(id)}
               >
-                {id === "light" ? "☀️" : id === "dark" ? "🌙" : "💻"} {label}
+                <ThemeIcon className="size-4" aria-hidden /> {label}
               </button>
             ))}
           </div>

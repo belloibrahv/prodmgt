@@ -8,7 +8,9 @@ export interface SearchResult {
   id: string;
   title: string;
   subtitle: string;
-  emoji?: string;
+  /** Project icon key and colour, for project results. */
+  icon?: string;
+  color?: string;
   href: string;
 }
 
@@ -39,7 +41,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
           },
         ],
       },
-      select: { id: true, name: true, emoji: true, description: true },
+      select: { id: true, name: true, emoji: true, color: true, description: true },
       take: limit,
     }),
     prisma.task.findMany({
@@ -65,7 +67,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
         id: true,
         title: true,
         description: true,
-        project: { select: { id: true, name: true, emoji: true } },
+        project: { select: { id: true, name: true } },
       },
       take: limit,
     }),
@@ -92,7 +94,7 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
         id: true,
         title: true,
         type: true,
-        project: { select: { id: true, name: true, emoji: true } },
+        project: { select: { id: true, name: true } },
       },
       take: limit,
     }),
@@ -104,21 +106,22 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
       id: p.id,
       title: p.name,
       subtitle: p.description?.slice(0, 80) ?? "Project",
-      emoji: p.emoji,
+      icon: p.emoji,
+      color: p.color,
       href: `/projects/${p.id}`,
     })),
     ...tasks.map((t) => ({
       type: "task" as const,
       id: t.id,
       title: t.title,
-      subtitle: `${t.project.emoji} ${t.project.name}`,
+      subtitle: t.project.name,
       href: `/projects/${t.project.id}`,
     })),
     ...documents.map((d) => ({
       type: "document" as const,
       id: d.id,
       title: d.title,
-      subtitle: `${d.project.emoji} ${d.project.name} · ${d.type.replace("_", " ")}`,
+      subtitle: `${d.project.name} · ${d.type.replace("_", " ")}`,
       href: `/projects/${d.project.id}`,
     })),
   ];

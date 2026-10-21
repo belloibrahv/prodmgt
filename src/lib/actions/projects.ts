@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
+import { DEFAULT_PROJECT_ICON } from "@/lib/project-icons";
 import { prisma } from "@/lib/db/prisma";
 import { canManageProject } from "@/lib/access";
 import { z } from "zod";
@@ -88,7 +89,7 @@ export async function createProject(formData: FormData): Promise<ActionResult<{ 
   const raw = {
     name:        formData.get("name"),
     description: formData.get("description") || undefined,
-    emoji:       formData.get("emoji") || "📁",
+    emoji:       formData.get("emoji") || DEFAULT_PROJECT_ICON,
     color:       formData.get("color") || "#bc0004",
     status:      formData.get("status") || "PLANNING",
     priority:    formData.get("priority") || "MEDIUM",

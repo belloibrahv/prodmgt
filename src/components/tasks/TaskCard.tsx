@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { MdCalendarToday, MdChatBubbleOutline } from "react-icons/md";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, CalendarIcon, MessageSquareIcon } from "lucide-react";
 import { PriorityBadge } from "@/components/ui/StatusBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { getDueLabel, cn, KANBAN_COLUMNS } from "@/lib/utils";
 import TaskDetailModal from "./TaskDetailModal";
 import type { TaskWithRelations } from "@/types";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
 
 const dueClass: Record<string, string> = {
   overdue: "text-tva-error bg-tva-error-lt",
@@ -44,8 +44,7 @@ export default function TaskCard({ task, onMove }: Props) {
       >
         {task.project && (
           <div className="flex items-center gap-2 mb-2.5">
-            <span className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: task.project.color }} />
-            <span className="text-xs text-tva-ink-m">{task.project.emoji}</span>
+            <ProjectIcon icon={task.project.emoji} color={task.project.color} size="xs" />
             <span className="text-xs font-medium text-tva-ink-m truncate">{task.project.name}</span>
           </div>
         )}
@@ -62,14 +61,14 @@ export default function TaskCard({ task, onMove }: Props) {
             <PriorityBadge priority={task.priority} />
             {task.comments.length > 0 && (
               <span className="flex items-center gap-1 text-xs text-tva-ink-m font-medium">
-                <MdChatBubbleOutline size={12} /> {task.comments.length}
+                <MessageSquareIcon size={12} /> {task.comments.length}
               </span>
             )}
           </div>
           <div className="flex items-center gap-2">
             {task.dueDate && due.label && (
               <span className={cn("flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-8 whitespace-nowrap", dueClass[due.variant])}>
-                <MdCalendarToday size={11} />
+                <CalendarIcon size={11} />
                 {due.label}
               </span>
             )}

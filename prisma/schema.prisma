@@ -129,7 +129,8 @@ model Project {
   id          String        @id @default(cuid())
   name        String
   description String?       @db.Text
-  emoji       String        @default("📁")
+  /// Icon key from src/lib/project-icons.ts (column predates icons, hence the name).
+  emoji       String        @default("folder")
   color       String        @default("#bc0004")
   status      ProjectStatus @default(PLANNING)
   priority    Priority      @default(MEDIUM)

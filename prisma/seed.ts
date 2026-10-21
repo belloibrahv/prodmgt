@@ -43,7 +43,7 @@ async function main() {
     data: {
       name: "TechVaults Client Portal",
       description: "A self-service portal allowing clients to view project status, invoices, and documents.",
-      emoji: "🏢",
+      emoji: "building",
       color: "#bc0004",
       status: ProjectStatus.ACTIVE,
       priority: Priority.HIGH,
@@ -65,7 +65,7 @@ async function main() {
     data: {
       name: "Mobile App v2.0",
       description: "Major redesign of the TechVaults mobile application with new features.",
-      emoji: "📱",
+      emoji: "smartphone",
       color: "#2563eb",
       status: ProjectStatus.ACTIVE,
       priority: Priority.CRITICAL,
@@ -86,7 +86,7 @@ async function main() {
     data: {
       name: "Internal Dashboard",
       description: "Internal analytics and operations dashboard for the TechVaults team.",
-      emoji: "📊",
+      emoji: "chart",
       color: "#1da851",
       status: ProjectStatus.PLANNING,
       priority: Priority.MEDIUM,

@@ -1,86 +1,82 @@
-"use client";
-
 import Link from "next/link";
-import { ArrowRight, Calendar, Clock, CheckCircle, Folder, Rocket, Lightbulb, Building, Smartphone, ShoppingCart, BarChart, Target, Settings, Microscope, Palette, FileText } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { ArrowRight, CalendarClock, CircleCheckBig } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { Button } from "@/components/ui/Button";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { PriorityBadge } from "@/components/ui/StatusBadge";
-import { getDueLabel } from "@/lib/utils";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { ProjectIcon } from "@/components/projects/ProjectIcon";
+import { cn, getDueLabel } from "@/lib/utils";
 import type { TaskWithRelations } from "@/types";
 
-export default function TasksDue({ tasks }: { tasks: TaskWithRelations[] }) {
-  const upcoming = tasks
-    .filter((t) => t.status !== "DONE" && t.dueDate)
-    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
-    .slice(0, 8);
+const DUE_STYLES: Record<string, string> = {
+  overdue:  "bg-destructive/10 text-destructive",
+  today:    "bg-warning/12 text-warning",
+  tomorrow: "bg-info/10 text-info",
+  upcoming: "bg-muted text-muted-foreground",
+  none:     "bg-muted text-muted-foreground",
+};
 
-  const dueVariantClass: Record<string, string> = {
-    overdue:  "text-tva-error bg-tva-error-lt",
-    today:    "text-tva-warn bg-tva-warn-lt",
-    tomorrow: "text-tva-info bg-tva-info-lt",
-    upcoming: "text-tva-ink-m bg-tva-surface",
-    none:     "text-tva-ink-m bg-tva-surface",
-  };
+export default function TasksDue({ tasks }: { tasks: TaskWithRelations[] }) {
+  const open = tasks.filter((t) => t.status !== "DONE" && t.dueDate);
+  const upcoming = open
+    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+    .slice(0, 7);
 
   return (
-    <Card className="shadow-sm hover:shadow-lg transition-all duration-300 border-tva-border/60 rounded-20 overflow-hidden">
-      <CardHeader className="pb-4 px-6 pt-6">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold">Tasks Due</CardTitle>
-          <Link 
-            href="/tasks" 
-            className="text-xs font-medium text-tva-red hover:text-tva-red-dk flex items-center gap-1 transition-all duration-200 hover:gap-2"
-          >
-            View all <ArrowRight size={12} />
-          </Link>
-        </div>
+    <Card className="shadow-xs">
+      <CardHeader>
+        <CardTitle>Upcoming deadlines</CardTitle>
+        <CardDescription>Open tasks, soonest first</CardDescription>
+        <CardAction>
+          <Button variant="ghost" size="sm" render={<Link href="/tasks" />} nativeButton={false}>
+            All tasks <ArrowRight data-icon="inline-end" />
+          </Button>
+        </CardAction>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="px-0">
         {upcoming.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <div className="flex justify-center mb-3">
-              <CheckCircle size={48} className="text-tva-ink-m" />
-            </div>
-            <p className="text-sm text-tva-ink-m font-medium">No upcoming deadlines.</p>
-          </div>
+          <Empty className="border-0 py-10">
+            <EmptyHeader>
+              <EmptyMedia variant="icon"><CircleCheckBig /></EmptyMedia>
+              <EmptyTitle>You&apos;re all caught up</EmptyTitle>
+              <EmptyDescription>No open tasks have a due date.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
-          <ul className="divide-y divide-tva-border/30">
-            {upcoming.map((task, index) => {
+          <ul className="divide-y">
+            {upcoming.map((task) => {
               const due = getDueLabel(task.dueDate);
               return (
-                <motion.li 
-                  key={task.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                  className="flex items-center gap-3 px-6 py-4.5 hover:bg-gradient-to-r hover:from-tva-red-xlt hover:to-transparent transition-all duration-200 group border-b border-tva-border/30 last:border-0"
-                >
-                  {/* Color indicator */}
-                  <div 
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm"
-                    style={{ backgroundColor: task.project.color }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-tva-ink truncate group-hover:text-tva-red transition-colors leading-tight">
-                      {task.title}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xs text-tva-ink-m">{task.project.emoji}</span>
-                      <span className="text-xs text-tva-ink-m font-medium">{task.project.name}</span>
+                <li key={task.id}>
+                  <Link
+                    href={`/projects/${task.project.id}`}
+                    className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                  >
+                    <ProjectIcon icon={task.project.emoji} color={task.project.color} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium group-hover:text-primary">{task.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">{task.project.name}</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                    <PriorityBadge priority={task.priority} />
-                    <span className={cn(
-                      "flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-8",
-                      dueVariantClass[due.variant]
-                    )}>
-                      <Clock size={11} />
+                    <div className="hidden sm:block">
+                      <PriorityBadge priority={task.priority} />
+                    </div>
+                    <span
+                      className={cn(
+                        "inline-flex w-[92px] shrink-0 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
+                        DUE_STYLES[due.variant],
+                      )}
+                    >
+                      <CalendarClock className="size-3.5" aria-hidden />
                       {due.label}
                     </span>
-                  </div>
-                </motion.li>
+                    {task.assignee ? (
+                      <Avatar name={task.assignee.name} image={task.assignee.image} size="xs" className="hidden md:inline-flex" />
+                    ) : (
+                      <span className="hidden size-6 md:block" aria-hidden />
+                    )}
+                  </Link>
+                </li>
               );
             })}
           </ul>

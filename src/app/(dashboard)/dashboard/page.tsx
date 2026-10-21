@@ -1,8 +1,12 @@
 import { Metadata } from "next";
+import Link from "next/link";
+import { format } from "date-fns";
+import { ListChecks } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getDashboardStats, getRecentActivity, getProjectStatusDistribution, getTaskCompletionTrend, getTeamWorkloadData } from "@/lib/actions/dashboard";
 import { getProjects } from "@/lib/actions/projects";
 import { getAllTasks } from "@/lib/actions/tasks";
+import { Button } from "@/components/ui/Button";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import ActiveProjects from "@/components/dashboard/ActiveProjects";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
@@ -10,10 +14,10 @@ import TasksDue from "@/components/dashboard/TasksDue";
 import TeamWorkload from "@/components/dashboard/TeamWorkload";
 import ProjectStatusChart from "@/components/dashboard/ProjectStatusChart";
 import TaskCompletionChart from "@/components/dashboard/TaskCompletionChart";
-import TeamWorkloadChart from "@/components/dashboard/TeamWorkloadChart";
-import { format } from "date-fns";
 
 export const metadata: Metadata = { title: "Dashboard" };
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default async function DashboardPage() {
   const [session, stats, projects, tasks, activity, projectStatus, taskTrend, teamWorkload] = await Promise.all([
@@ -28,53 +32,48 @@ export default async function DashboardPage() {
   ]);
 
   const firstName = session?.user?.name?.split(" ")[0] ?? "there";
-  const today = format(new Date(), "EEEE, MMMM d");
+  const now = Date.now();
+  const dueThisWeek = tasks.filter((t) => {
+    if (t.status === "DONE" || !t.dueDate) return false;
+    const due = new Date(t.dueDate).getTime();
+    return due >= now && due - now <= WEEK_MS;
+  }).length;
+
+  const summary = [
+    `${dueThisWeek} ${dueThisWeek === 1 ? "task is" : "tasks are"} due this week`,
+    stats.overdueTasks > 0 && `${stats.overdueTasks} overdue`,
+  ].filter(Boolean).join(" and ");
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-tva-ink">
-            Welcome back, {firstName} 👋
-          </h1>
-          <p className="text-sm text-tva-ink-m mt-0.5">
-            Here&apos;s what&apos;s happening across your projects — {today}
-          </p>
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">{format(new Date(), "EEEE, MMMM d")}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {firstName}</h1>
+          <p className="text-sm text-muted-foreground">Across your projects, {summary}.</p>
         </div>
-      </div>
+        <Button variant="outline" render={<Link href="/tasks" />} nativeButton={false}>
+          <ListChecks /> Open task board
+        </Button>
+      </header>
 
-      {/* Stats */}
       <DashboardStats stats={stats} />
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="bg-white border border-tva-border/60 rounded-20 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-          <h3 className="text-sm font-semibold text-tva-ink mb-4">Project Status Distribution</h3>
-          <ProjectStatusChart data={projectStatus} />
-        </div>
-        <div className="bg-white border border-tva-border/60 rounded-20 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-          <h3 className="text-sm font-semibold text-tva-ink mb-4">Task Completion (30 Days)</h3>
-          <TaskCompletionChart data={taskTrend} />
-        </div>
-        <div className="bg-white border border-tva-border/60 rounded-20 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-          <h3 className="text-sm font-semibold text-tva-ink mb-4">Team Workload</h3>
-          <TeamWorkloadChart data={teamWorkload} />
-        </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2"><TaskCompletionChart data={taskTrend} /></div>
+        <ProjectStatusChart data={projectStatus} />
       </div>
 
-      {/* Active Projects + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <ActiveProjects projects={projects.filter(p => p.status === "ACTIVE").slice(0, 5)} />
-        <ActivityFeed activity={activity} />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2"><TasksDue tasks={tasks} /></div>
+        <TeamWorkload members={teamWorkload} />
       </div>
 
-      {/* Tasks + Team workload */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <TasksDue tasks={tasks} />
+          <ActiveProjects projects={projects.filter((p) => p.status === "ACTIVE").slice(0, 5)} />
         </div>
-        <TeamWorkload tasks={tasks} />
+        <ActivityFeed activity={activity} />
       </div>
     </div>
   );
