@@ -49,7 +49,7 @@ export default function RegisterForm() {
       <Input label="Email address" type="email" placeholder="you@company.com" value={form.email} onChange={set("email")} leftIcon={<Mail size={14} />} autoComplete="email" required />
       <Input label="Password" type="password" placeholder="Min. 8 characters" value={form.password} onChange={set("password")} leftIcon={<Lock size={14} />} minLength={8} autoComplete="new-password" required />
       <Input label="Job title (optional)" placeholder="Product Manager" value={form.jobTitle} onChange={set("jobTitle")} leftIcon={<Briefcase size={14} />} />
-      <Button type="submit" loading={loading} className="w-full justify-center py-2.5 mt-1">
+      <Button type="submit" loading={loading} className="mt-2 h-9 w-full">
         Create account
       </Button>
     </form>

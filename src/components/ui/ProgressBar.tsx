@@ -8,9 +8,9 @@ interface ProgressBarProps {
 }
 
 const colorClasses = {
-  red:    "bg-tva-red",
-  green:  "bg-tva-success",
-  yellow: "bg-tva-warn",
+  red:    "bg-primary",
+  green:  "bg-success",
+  yellow: "bg-warning",
 };
 
 export function ProgressBar({ value, className, color = "red", showLabel }: ProgressBarProps) {
@@ -18,7 +18,7 @@ export function ProgressBar({ value, className, color = "red", showLabel }: Prog
   const c = pct === 100 ? "green" : pct >= 60 ? "yellow" : color;
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <div className="flex-1 h-1.5 bg-tva-border rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
         <div
           className={cn("h-full rounded-full transition-all duration-500", colorClasses[c])}
           style={{ width: `${pct}%` }}
@@ -29,7 +29,7 @@ export function ProgressBar({ value, className, color = "red", showLabel }: Prog
         />
       </div>
       {showLabel && (
-        <span className="text-[11px] font-semibold text-tva-ink-m w-8 text-right">{pct}%</span>
+        <span className="text-xs font-semibold text-muted-foreground w-8 text-right">{pct}%</span>
       )}
     </div>
   );

@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { BriefcaseIcon, ClipboardListIcon, MailIcon, PlusIcon, UsersIcon } from "lucide-react";
+import Link from "next/link";
+import { MailIcon, PlusIcon, SearchIcon, SearchXIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PageHeader } from "@/components/layout/PageHeader";
 import InviteTeamMemberModal from "./InviteTeamMemberModal";
-import { cn } from "@/lib/utils";
 
 interface TeamMember {
   id: string;
@@ -25,130 +29,123 @@ export default function TeamClient({ members }: { members: TeamMember[] }) {
   const [search, setSearch] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
 
+  const q = search.trim().toLowerCase();
   const filtered = members.filter(
     (m) =>
-      (m.name?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
-      m.email.toLowerCase().includes(search.toLowerCase()) ||
-      (m.jobTitle?.toLowerCase().includes(search.toLowerCase()) ?? false)
+      !q ||
+      (m.name?.toLowerCase().includes(q) ?? false) ||
+      m.email.toLowerCase().includes(q) ||
+      (m.jobTitle?.toLowerCase().includes(q) ?? false),
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-tva-ink">Team</h1>
-          <p className="text-sm text-tva-ink-m mt-1">
-            {members.length} member{members.length !== 1 ? "s" : ""} in your workspace
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="flex items-center gap-2 bg-white border border-tva-border/60 rounded-full px-4 py-2.5 focus-within:border-tva-red focus-within:ring-2 focus-within:ring-tva-red/10 transition-all">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tva-ink-m flex-shrink-0">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search members…"
-              className="bg-transparent text-sm text-tva-ink placeholder:text-tva-ink-m outline-none w-44"
-            />
-          </div>
-          <Button className="gap-2" onClick={() => setShowInviteModal(true)}>
-            <PlusIcon size={18} /> Invite Member
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Team"
+        description={`${members.length} member${members.length !== 1 ? "s" : ""} in your workspace`}
+        actions={
+          <Button onClick={() => setShowInviteModal(true)}>
+            <PlusIcon /> Invite member
           </Button>
-        </div>
-      </div>
+        }
+      />
+
+      <InputGroup className="h-8 w-full bg-card sm:w-72">
+        <InputGroupAddon><SearchIcon /></InputGroupAddon>
+        <InputGroupInput
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, email or role…"
+          aria-label="Search members"
+        />
+      </InputGroup>
 
       {filtered.length === 0 ? (
-        <EmptyState
-          icon={<UsersIcon size={48} />}
-          title="No members found"
-          description="Invite your team members to collaborate."
-        />
+        <Empty className="rounded-xl border border-dashed bg-card py-16">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">{q ? <SearchXIcon /> : <UsersIcon />}</EmptyMedia>
+            <EmptyTitle>{q ? "No matching members" : "No members yet"}</EmptyTitle>
+            <EmptyDescription>{q ? "Try a different name, email or role." : "Invite your team to start collaborating."}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map((member) => (
-            <MemberCard key={member.id} member={member} />
-          ))}
+        <div className="overflow-hidden rounded-xl border bg-card shadow-xs">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/40 hover:bg-muted/40">
+                <TableHead className="pl-4">Member</TableHead>
+                <TableHead className="hidden md:table-cell">Role</TableHead>
+                <TableHead className="hidden lg:table-cell">Projects</TableHead>
+                <TableHead className="text-right">Assigned tasks</TableHead>
+                <TableHead className="w-12 pr-4"><span className="sr-only">Contact</span></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((m) => {
+                // A member can appear in a project more than once across roles.
+                const projects = Array.from(new Map(m.memberships.map((x) => [x.project.id, x.project])).values());
+                return (
+                  <TableRow key={m.id}>
+                    <TableCell className="pl-4">
+                      <span className="flex items-center gap-3">
+                        <Avatar name={m.name} image={m.image} size="sm" />
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium">{m.name ?? "Unnamed"}</span>
+                          <span className="block truncate text-xs text-muted-foreground">{m.email}</span>
+                        </span>
+                      </span>
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground md:table-cell">{m.jobTitle ?? "—"}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {projects.length === 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        <span className="flex flex-wrap gap-1.5">
+                          {projects.slice(0, 3).map((p) => (
+                            <Link
+                              key={p.id}
+                              href={`/projects/${p.id}`}
+                              className="inline-flex max-w-40 items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs hover:bg-muted"
+                            >
+                              <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: p.color }} aria-hidden />
+                              <span className="truncate">{p.name}</span>
+                            </Link>
+                          ))}
+                          {projects.length > 3 && (
+                            <span className="px-1 text-xs text-muted-foreground">+{projects.length - 3}</span>
+                          )}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{m._count.assignedTasks}</TableCell>
+                    <TableCell className="pr-4">
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className="text-muted-foreground"
+                              render={<a href={`mailto:${m.email}`} />}
+                              nativeButton={false}
+                              aria-label={`Email ${m.name ?? m.email}`}
+                            />
+                          }
+                        >
+                          <MailIcon />
+                        </TooltipTrigger>
+                        <TooltipContent>Email {m.name?.split(" ")[0] ?? m.email}</TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      <InviteTeamMemberModal
-        open={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
-      />
-    </div>
-  );
-}
-
-function MemberCard({ member }: { member: TeamMember }) {
-  // Deduplicate projects
-  const projects = Array.from(
-    new Map(member.memberships.map((m) => [m.project.id, m.project])).values()
-  ).slice(0, 3);
-
-  const isOnline = Math.random() > 0.5; // demo — replace with real presence
-
-  return (
-    <div className="bg-white border border-tva-border/60 rounded-20 p-6 shadow-sm hover:shadow-lg transition-all flex flex-col gap-4">
-      {/* Avatar + name */}
-      <div className="flex flex-col items-center text-center gap-3">
-        <div className="relative inline-block">
-          <Avatar name={member.name} image={member.image} size="xl" />
-          <span className={cn(
-            "absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-white",
-            isOnline ? "bg-tva-success" : "bg-gray-300",
-          )} />
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-tva-ink">{member.name ?? "Unknown"}</p>
-          {member.jobTitle && (
-            <p className="text-xs text-tva-ink-m mt-1">{member.jobTitle}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-tva-surface/50 rounded-12 p-3 text-center">
-          <p className="text-lg font-bold text-tva-ink">{member.memberships.length}</p>
-          <p className="text-xs text-tva-ink-m">Projects</p>
-        </div>
-        <div className="bg-tva-surface/50 rounded-12 p-3 text-center">
-          <p className="text-lg font-bold text-tva-ink">{member._count.assignedTasks}</p>
-          <p className="text-xs text-tva-ink-m">Tasks</p>
-        </div>
-      </div>
-
-      {/* Projects */}
-      {projects.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {projects.map((p) => (
-            <div key={p.id} className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: p.color }} />
-              <span className="text-xs text-tva-ink-m truncate">{p.name}</span>
-            </div>
-          ))}
-          {member.memberships.length > 3 && (
-            <p className="text-xs text-tva-ink-m">+{member.memberships.length - 3} more</p>
-          )}
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="border-t border-tva-border/40 pt-4 flex justify-center gap-2">
-        <button className="flex items-center gap-1.5 text-xs font-medium text-tva-ink-m hover:text-tva-red transition-colors px-3 py-2 rounded-8 hover:bg-tva-red-xlt">
-          <MailIcon size={14} /> Message
-        </button>
-        <button className="flex items-center gap-1.5 text-xs font-medium text-tva-ink-m hover:text-tva-red transition-colors px-3 py-2 rounded-8 hover:bg-tva-red-xlt">
-          <ClipboardListIcon size={14} /> Tasks
-        </button>
-        <button className="flex items-center gap-1.5 text-xs font-medium text-tva-ink-m hover:text-tva-red transition-colors px-3 py-2 rounded-8 hover:bg-tva-red-xlt">
-          <BriefcaseIcon size={14} /> Profile
-        </button>
-      </div>
+      <InviteTeamMemberModal open={showInviteModal} onClose={() => setShowInviteModal(false)} />
     </div>
   );
 }

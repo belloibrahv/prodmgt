@@ -86,16 +86,17 @@ export default function LoginForm() {
           error={errors.password}
           leftIcon={<Lock size={14} />}
           autoComplete="current-password"
+          className="pr-10"
         />
         <motion.button
           type="button"
           onClick={() => setShowPw(!showPw)}
-          className="absolute right-3 top-8 text-tva-ink-m hover:text-tva-ink transition-colors"
+          className="absolute top-[30px] right-1 flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label={showPw ? "Hide password" : "Show password"}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
-          {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+          {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </motion.button>
       </motion.div>
 
@@ -104,7 +105,7 @@ export default function LoginForm() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
-        <Button type="submit" loading={loading} className="w-full justify-center py-2.5 mt-1">
+        <Button type="submit" loading={loading} className="mt-2 h-9 w-full">
           Sign in
         </Button>
       </motion.div>

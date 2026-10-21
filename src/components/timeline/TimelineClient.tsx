@@ -2,7 +2,8 @@
 
 import { differenceInDays, format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isWeekend } from "date-fns";
 import { CalendarRangeIcon } from "lucide-react";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate, cn } from "@/lib/utils";
 import type { ProjectWithRelations } from "@/types";
@@ -13,16 +14,15 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
 
   if (active.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-tva-ink">Timeline</h1>
-          <p className="text-sm text-tva-ink-m mt-1">Project schedules and milestones</p>
-        </div>
-        <EmptyState
-          icon={<CalendarRangeIcon size={48} />}
-          title="No active projects with dates"
-          description="Set start and due dates on your projects to see them on the timeline."
-        />
+      <div className="flex flex-col gap-6">
+        <PageHeader title="Timeline" description="Project schedules and milestones" />
+        <Empty className="rounded-xl border border-dashed bg-card py-16">
+          <EmptyHeader>
+            <EmptyMedia variant="icon"><CalendarRangeIcon /></EmptyMedia>
+            <EmptyTitle>Nothing scheduled yet</EmptyTitle>
+            <EmptyDescription>Set start and due dates on your projects to see them on the timeline.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       </div>
     );
   }
@@ -56,29 +56,26 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
   const days = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-tva-ink">Timeline</h1>
-        <p className="text-sm text-tva-ink-m mt-1">
-          {active.length} active project{active.length !== 1 ? "s" : ""} scheduled
-        </p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Timeline"
+        description={`${active.length} project${active.length !== 1 ? "s" : ""} scheduled`}
+      />
 
-      <div className="bg-white border border-tva-border/60 rounded-20 shadow-sm overflow-hidden">
+      <div className="bg-card border border-border rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <div style={{ minWidth: totalDays * dayWidth + 220 }}>
 
             {/* Month header row */}
-            <div className="flex border-b border-tva-border/40">
+            <div className="flex border-b border-border">
               {/* Project label column */}
-              <div className="w-52 min-w-[208px] flex-shrink-0 bg-tva-surface/50 border-r border-tva-border/40" />
+              <div className="w-52 min-w-[208px] flex-shrink-0 bg-muted/50 border-r border-border" />
               <div className="flex">
                 {months.map((m, i) => (
                   <div
                     key={i}
                     style={{ width: m.days * dayWidth }}
-                    className="px-3 py-3 text-xs font-semibold text-tva-ink border-r border-tva-border/30 bg-tva-surface/50"
+                    className="px-3 py-3 text-xs font-semibold text-foreground border-r border-border bg-muted/50"
                   >
                     {m.label}
                   </div>
@@ -87,18 +84,18 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
             </div>
 
             {/* Day header row */}
-            <div className="flex border-b border-tva-border/40">
-              <div className="w-52 min-w-[208px] flex-shrink-0 border-r border-tva-border/40 bg-tva-surface/50" />
+            <div className="flex border-b border-border">
+              <div className="w-52 min-w-[208px] flex-shrink-0 border-r border-border bg-muted/50" />
               <div className="flex">
                 {days.map((day, i) => (
                   <div
                     key={i}
                     style={{ width: dayWidth }}
                     className={cn(
-                      "flex flex-col items-center justify-center py-2 border-r border-tva-border/20 text-[10px] font-medium select-none",
-                      isWeekend(day) && "bg-tva-surface/30",
-                      isToday(day) && "bg-tva-red-lt font-bold text-tva-red",
-                      !isWeekend(day) && !isToday(day) && "text-tva-ink-m",
+                      "flex flex-col items-center justify-center py-2 border-r border-border text-xs font-medium select-none",
+                      isWeekend(day) && "bg-muted/30",
+                      isToday(day) && "bg-primary/10 font-bold text-primary",
+                      !isWeekend(day) && !isToday(day) && "text-muted-foreground",
                     )}
                   >
                     <span>{format(day, "d")}</span>
@@ -119,12 +116,12 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
               ));
 
               return (
-                <div key={project.id} className="flex items-center border-b border-tva-border/40 hover:bg-tva-red-xlt/50 transition-colors group">
+                <div key={project.id} className="flex items-center border-b border-border hover:bg-accent/50 transition-colors group">
                   {/* Label */}
-                  <div className="w-52 min-w-[208px] flex-shrink-0 px-4 py-4 border-r border-tva-border/40 flex items-center gap-2">
+                  <div className="w-52 min-w-[208px] flex-shrink-0 px-4 py-4 border-r border-border flex items-center gap-2">
                     <ProjectIcon icon={project.emoji} color={project.color} size="sm" />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-tva-ink truncate group-hover:text-tva-red transition-colors">
+                      <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                         {project.name}
                       </p>
                       <StatusBadge status={project.status} />
@@ -139,7 +136,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
                       if (todayOffset >= 0 && todayOffset <= totalDays) {
                         return (
                           <div
-                            className="absolute top-0 bottom-0 w-px bg-tva-red z-10"
+                            className="absolute top-0 bottom-0 w-px bg-primary z-10"
                             style={{ left: todayOffset * dayWidth + dayWidth / 2 }}
                           />
                         );
@@ -149,7 +146,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
 
                     {/* Project bar */}
                     <div
-                      className="absolute top-3.5 rounded-12 flex items-center overflow-hidden shadow-sm"
+                      className="absolute top-3.5 rounded-lg flex items-center overflow-hidden shadow-xs"
                       style={{
                         left:   offsetDays * dayWidth + 4,
                         width:  Math.max(spanDays * dayWidth - 8, 0),
@@ -159,7 +156,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
                     >
                       {/* Progress fill */}
                       <div
-                        className="absolute left-0 top-0 bottom-0 opacity-30 bg-white"
+                        className="absolute left-0 top-0 bottom-0 opacity-30 bg-card"
                         style={{ width: `${pct}%` }}
                       />
                       <span className="relative z-10 px-2.5 text-xs font-semibold text-white truncate whitespace-nowrap">
@@ -180,7 +177,7 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
                         >
                           <div className={cn(
                             "w-3 h-3 rotate-45 border-2",
-                            ms.completedAt ? "bg-tva-success border-tva-success" : "bg-white border-tva-warn",
+                            ms.completedAt ? "bg-success border-tva-success" : "bg-card border-tva-warn",
                           )} />
                         </div>
                       );
@@ -193,15 +190,15 @@ export default function TimelineClient({ projects }: { projects: ProjectWithRela
         </div>
 
         {/* Legend */}
-        <div className="px-6 py-4 border-t border-tva-border/40 flex items-center gap-6 text-xs text-tva-ink-m bg-tva-surface/50">
+        <div className="px-6 py-4 border-t border-border flex items-center gap-6 text-xs text-muted-foreground bg-muted/50">
           <span className="flex items-center gap-2">
-            <span className="w-px h-4 bg-tva-red inline-block" /> Today
+            <span className="w-px h-4 bg-primary inline-block" /> Today
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rotate-45 border-2 border-tva-warn bg-white inline-block" /> Milestone
+            <span className="w-3 h-3 rotate-45 border-2 border-tva-warn bg-card inline-block" /> Milestone
           </span>
           <span className="flex items-center gap-2">
-            <span className="w-3 h-3 rotate-45 border-2 border-tva-success bg-tva-success inline-block" /> Completed milestone
+            <span className="w-3 h-3 rotate-45 border-2 border-tva-success bg-success inline-block" /> Completed milestone
           </span>
         </div>
       </div>

@@ -11,10 +11,10 @@ interface AvatarProps {
 
 const sizeClasses = {
   xs: "w-6 h-6 text-[9px] rounded",
-  sm: "w-8 h-8 text-[11px] rounded-8",
-  md: "w-9 h-9 text-[12px] rounded-12",
-  lg: "w-12 h-12 text-base rounded-16",
-  xl: "w-16 h-16 text-xl rounded-16",
+  sm: "w-8 h-8 text-xs rounded-md",
+  md: "w-9 h-9 text-xs rounded-lg",
+  lg: "w-12 h-12 text-base rounded-xl",
+  xl: "w-16 h-16 text-xl rounded-xl",
 };
 
 const imgSizes = { xs: 24, sm: 32, md: 36, lg: 48, xl: 64 };
@@ -23,7 +23,7 @@ export function Avatar({ name, image, size = "md", className, showOnline }: Avat
   return (
     <div className={cn("relative inline-flex flex-shrink-0", className)}>
       <div className={cn(
-        "flex items-center justify-center bg-tva-red-lt text-tva-red font-bold select-none overflow-hidden",
+        "flex items-center justify-center bg-primary/10 text-primary font-bold select-none overflow-hidden",
         sizeClasses[size],
       )}>
         {image ? (
@@ -55,7 +55,7 @@ export function AvatarGroup({ users, max = 3 }: { users: Array<{ name?: string |
           className="border-2 border-white ring-0" />
       ))}
       {rest > 0 && (
-        <div className="w-8 h-8 rounded-8 bg-tva-surface border-2 border-white flex items-center justify-center text-[10px] font-bold text-tva-ink-m">
+        <div className="w-8 h-8 rounded-md bg-muted border-2 border-white flex items-center justify-center text-xs font-bold text-muted-foreground">
           +{rest}
         </div>
       )}
