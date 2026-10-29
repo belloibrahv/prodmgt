@@ -174,3 +174,16 @@
     html:has(#tva-marketing) { scroll-behavior: smooth; }
   }
 }
+
+/* ── Print ───────────────────────────────────────────────────
+   Minutes and reports print (or save to PDF) without the app chrome. */
+@media print {
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"],
+  [data-slot="site-header"] {
+    display: none !important;
+  }
+  html, body { background: #fff !important; }
+  main { padding: 0 !important; }
+  [data-print-avoid-break] { break-inside: avoid; }
+}

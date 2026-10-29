@@ -9,7 +9,7 @@ import {
   SidebarMenuItem, SidebarRail,
 } from "@/components/ui/sidebar";
 import NavUser from "@/components/layout/NavUser";
-import { PRIMARY_NAV, SETTINGS_NAV, WORKSPACE_NAV, isActivePath, type NavItem } from "@/components/layout/nav";
+import { OPERATE_NAV, PRIMARY_NAV, SETTINGS_NAV, WORKSPACE_NAV, isActivePath, type NavItem } from "@/components/layout/nav";
 
 interface Props {
   user: { name?: string | null; email?: string | null; image?: string | null };
@@ -43,7 +43,7 @@ export default function AppSidebar({ user }: Props) {
               </span>
               <span className="grid flex-1 text-left leading-tight">
                 <span className="truncate text-sm font-semibold text-foreground">TechVaults</span>
-                <span className="truncate text-xs text-muted-foreground">Project Manager</span>
+                <span className="truncate text-xs text-muted-foreground">Works · Operating system</span>
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -55,6 +55,12 @@ export default function AppSidebar({ user }: Props) {
           <SidebarGroupLabel>Plan</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{items(PRIMARY_NAV)}</SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Operate</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>{items(OPERATE_NAV)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>

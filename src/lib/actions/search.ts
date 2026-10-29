@@ -29,12 +29,6 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
         AND: [
           {
             OR: [
-              { ownerId: session.user.id },
-              { members: { some: { userId: session.user.id } } },
-            ],
-          },
-          {
-            OR: [
               { name: { contains: term, mode: "insensitive" } },
               { description: { contains: term, mode: "insensitive" } },
             ],
@@ -47,14 +41,6 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
     prisma.task.findMany({
       where: {
         AND: [
-          {
-            project: {
-              OR: [
-                { ownerId: session.user.id },
-                { members: { some: { userId: session.user.id } } },
-              ],
-            },
-          },
           {
             OR: [
               { title: { contains: term, mode: "insensitive" } },
@@ -74,14 +60,6 @@ export async function globalSearch(query: string): Promise<SearchResult[]> {
     prisma.document.findMany({
       where: {
         AND: [
-          {
-            project: {
-              OR: [
-                { ownerId: session.user.id },
-                { members: { some: { userId: session.user.id } } },
-              ],
-            },
-          },
           {
             OR: [
               { title: { contains: term, mode: "insensitive" } },

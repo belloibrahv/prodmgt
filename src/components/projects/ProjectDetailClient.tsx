@@ -3,9 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-  CalendarDays, CircleCheck, CircleDot, Columns3, FileText, Flag, ListIcon,
+  Building2, CalendarDays, CircleCheck, CircleDot, Columns3, Eye, FileText, Flag, Goal, ListIcon,
   MoreHorizontal, OctagonAlert, Pencil, Plus, Trash2, UserMinus, UserRound,
 } from "lucide-react";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -31,19 +32,51 @@ import InviteMemberModal from "./InviteMemberModal";
 import { deleteProject, removeProjectMember, updateProjectMemberRole } from "@/lib/actions/projects";
 import type { ProjectWithRelations, WorkspaceMember } from "@/types";
 import { ProjectIcon } from "@/components/projects/ProjectIcon";
+import ProjectCheckIns from "./ProjectCheckIns";
+import { HealthBadge } from "@/components/business/primitives";
+import type { StatusUpdateWithRelations } from "@/lib/business-queries";
 
-type Tab = "overview" | "tasks" | "milestones" | "documents" | "members";
+type Tab = "overview" | "updates" | "tasks" | "milestones" | "documents" | "members";
+const TABS: { value: Tab; label: string }[] = [
+  { value: "overview", label: "Overview" },
+  { value: "updates", label: "Check-ins" },
+  { value: "tasks", label: "Tasks" },
+  { value: "milestones", label: "Milestones" },
+  { value: "documents", label: "Documents" },
+  { value: "members", label: "Members" },
+];
+
+export interface ProjectAccess {
+  /** Member who can change tasks, milestones and documents. */
+  canEdit: boolean;
+  /** Owner or admin, who can change project details and members. */
+  canManage: boolean;
+  isOwner: boolean;
+}
+
+interface LinkedObjective { id: string; title: string; period: string }
 
 export default function ProjectDetailClient({
   project,
   workspaceMembers,
+  updates,
+  access,
+  objectives,
+  initialTab = "overview",
 }: {
   project: ProjectWithRelations;
   workspaceMembers: WorkspaceMember[];
+  updates: StatusUpdateWithRelations[];
+  access: ProjectAccess;
+  objectives: LinkedObjective[];
+  /** From the ?tab= query; ignored if it isn't a known tab. */
+  initialTab?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTab] = useState<Tab>(TABS.find((t) => t.value === initialTab)?.value ?? "overview");
+  const { canEdit, canManage, isOwner } = access;
+  const latest = updates[0];
   const [taskView, setTaskView] = useState<"kanban" | "table">("kanban");
   const [newTaskStatus, setNewTaskStatus] = useState<string | null>(null);
   const [showEditProject, setShowEditProject] = useState(false);
@@ -69,6 +102,7 @@ export default function ProjectDetailClient({
 
   const counts: Record<Tab, number | null> = {
     overview: null,
+    updates: updates.length,
     tasks: project.tasks.length,
     milestones: project.milestones.length,
     documents: project.documents.length,
@@ -88,29 +122,54 @@ export default function ProjectDetailClient({
                   <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
                   <StatusBadge status={project.status} />
                   <PriorityBadge priority={project.priority} />
+                  {latest && <HealthBadge health={latest.health} />}
                 </div>
+                {(project.client || objectives.length > 0) && (
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    {project.client && <span className="inline-flex items-center gap-1.5"><Building2 className="size-3.5" />{project.client}</span>}
+                    {objectives.map((o) => (
+                      <Link key={o.id} href={`/goals#objective-${o.id}`} className="inline-flex items-center gap-1.5 hover:text-foreground">
+                        <Goal className="size-3.5" />{o.title} <span className="opacity-70">· {o.period}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
                 {project.description && (
                   <p className="max-w-3xl text-sm text-muted-foreground">{project.description}</p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {!canEdit && (
+                <span className="inline-flex items-center gap-1.5 rounded-md border bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
+                  <Eye className="size-3.5" /> View only · ask {project.owner.name?.split(" ")[0] ?? "the owner"} to add you
+                </span>
+              )}
+              {canManage && (
               <Button variant="outline" onClick={() => setShowEditProject(true)}>
                 <Pencil /> Edit
               </Button>
+              )}
+              {canEdit && (
               <DropdownMenu>
                 <DropdownMenuTrigger render={<Button variant="outline" size="icon" aria-label="More project actions" />}>
                   <MoreHorizontal />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => setShowInviteMember(true)}><UserRound /> Add member</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTab("updates")}><Flag /> Post check-in</DropdownMenuItem>
+                  {canManage && <DropdownMenuItem onClick={() => setShowInviteMember(true)}><UserRound /> Add member</DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => setShowNewDoc(true)}><FileText /> New document</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
-                    <Trash2 /> Delete project
-                  </DropdownMenuItem>
+                  {isOwner && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
+                        <Trash2 /> Delete project
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
             </div>
           </div>
 
@@ -142,9 +201,9 @@ export default function ProjectDetailClient({
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="gap-5">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b">
             <TabsList variant="line" className="-mb-px h-10 overflow-x-auto">
-              {(["overview", "tasks", "milestones", "documents", "members"] as const).map((t) => (
-                <TabsTrigger key={t} value={t} className="px-3 capitalize">
-                  {t}
+              {TABS.map(({ value: t, label }) => (
+                <TabsTrigger key={t} value={t} className="px-3">
+                  {label}
                   {counts[t] !== null && <span className="text-xs tabular-nums text-muted-foreground">{counts[t]}</span>}
                 </TabsTrigger>
               ))}
@@ -157,14 +216,15 @@ export default function ProjectDetailClient({
                     <ToggleGroupItem value="kanban" aria-label="Board view"><Columns3 /></ToggleGroupItem>
                     <ToggleGroupItem value="table" aria-label="Table view"><ListIcon /></ToggleGroupItem>
                   </ToggleGroup>
-                  <Button size="sm" onClick={() => setNewTaskStatus("TODO")}><Plus /> Add task</Button>
+                  {canEdit && <Button size="sm" onClick={() => setNewTaskStatus("TODO")}><Plus /> Add task</Button>}
                 </>
               )}
-              {tab === "documents" && <Button size="sm" onClick={() => setShowNewDoc(true)}><Plus /> New document</Button>}
-              {tab === "members" && <Button size="sm" onClick={() => setShowInviteMember(true)}><Plus /> Add member</Button>}
+              {tab === "documents" && canEdit && <Button size="sm" onClick={() => setShowNewDoc(true)}><Plus /> New document</Button>}
+              {tab === "members" && canManage && <Button size="sm" onClick={() => setShowInviteMember(true)}><Plus /> Add member</Button>}
             </div>
           </div>
 
+          <TabsContent value="updates"><ProjectCheckIns projectId={project.id} updates={updates} canEdit={canEdit} /></TabsContent>
           <TabsContent value="overview"><ProjectOverview project={project} pct={pct} done={done} onOpenTab={setTab} /></TabsContent>
           <TabsContent value="tasks">
             {taskView === "kanban"
@@ -173,7 +233,7 @@ export default function ProjectDetailClient({
           </TabsContent>
           <TabsContent value="milestones"><ProjectMilestones milestones={project.milestones} tasks={project.tasks} /></TabsContent>
           <TabsContent value="documents"><ProjectDocuments documents={project.documents} /></TabsContent>
-          <TabsContent value="members"><ProjectMembersTab members={project.members} projectId={project.id} ownerId={project.ownerId} /></TabsContent>
+          <TabsContent value="members"><ProjectMembersTab members={project.members} projectId={project.id} ownerId={project.ownerId} canManage={canManage} /></TabsContent>
         </Tabs>
       </div>
 
@@ -285,7 +345,7 @@ const ROLES = [
   { value: "VIEWER", label: "Viewer" },
 ];
 
-function ProjectMembersTab({ members, projectId, ownerId }: { members: ProjectWithRelations["members"]; projectId: string; ownerId: string }) {
+function ProjectMembersTab({ members, projectId, ownerId, canManage }: { members: ProjectWithRelations["members"]; projectId: string; ownerId: string; canManage: boolean }) {
   const [pending, startTransition] = useTransition();
   const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null);
 
@@ -339,7 +399,7 @@ function ProjectMembersTab({ members, projectId, ownerId }: { members: ProjectWi
                       items={ROLES}
                       value={m.role}
                       onValueChange={(v) => v && handleRoleChange(m.user.id, String(v))}
-                      disabled={pending || isOwner}
+                      disabled={pending || isOwner || !canManage}
                     >
                       <SelectTrigger size="sm" className="w-[120px]" aria-label={`Role for ${m.user.name}`}>
                         <SelectValue />
@@ -350,7 +410,7 @@ function ProjectMembersTab({ members, projectId, ownerId }: { members: ProjectWi
                     </Select>
                   </TableCell>
                   <TableCell className="pr-4">
-                    {!isOwner && (
+                    {!isOwner && canManage && (
                       <Button
                         variant="ghost"
                         size="icon-sm"

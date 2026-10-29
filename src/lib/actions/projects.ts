@@ -11,6 +11,7 @@ import type { ActionResult, ProjectWithRelations } from "@/types";
 const projectSchema = z.object({
   name:        z.string().trim().min(1, "Project name is required").max(100),
   description: z.string().optional(),
+  client:      z.string().trim().max(120).optional(),
   emoji:       z.string().optional(),
   color:       z.string().optional(),
   status:      z.enum(["PLANNING","ACTIVE","ON_HOLD","COMPLETED","CANCELLED"]).optional(),
@@ -23,18 +24,14 @@ export async function getProjects(): Promise<ProjectWithRelations[]> {
   const session = await auth();
   if (!session?.user?.id) return [];
 
+  // The whole company sees the whole portfolio; membership only governs who can edit.
   return prisma.project.findMany({
-    where: {
-      OR: [
-        { ownerId: session.user.id },
-        { members: { some: { userId: session.user.id } } },
-      ],
-    },
     include: {
       owner: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
       members: { include: { user: { select: { id: true, name: true, email: true, image: true, jobTitle: true } } } },
       tasks: true,
       milestones: true,
+      statusUpdates: { orderBy: { createdAt: "desc" }, take: 1, select: { health: true, createdAt: true } },
       _count: { select: { tasks: true, documents: true, members: true } },
     },
     orderBy: { updatedAt: "desc" },
@@ -45,14 +42,8 @@ export async function getProjectById(id: string): Promise<ProjectWithRelations |
   const session = await auth();
   if (!session?.user?.id) return null;
 
-  return prisma.project.findFirst({
-    where: {
-      id,
-      OR: [
-        { ownerId: session.user.id },
-        { members: { some: { userId: session.user.id } } },
-      ],
-    },
+  return prisma.project.findUnique({
+    where: { id },
     include: {
       owner: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
       members: { include: { user: { select: { id: true, name: true, email: true, image: true, jobTitle: true } } } },
@@ -89,6 +80,7 @@ export async function createProject(formData: FormData): Promise<ActionResult<{ 
   const raw = {
     name:        formData.get("name"),
     description: formData.get("description") || undefined,
+    client:      formData.get("client") || undefined,
     emoji:       formData.get("emoji") || DEFAULT_PROJECT_ICON,
     color:       formData.get("color") || "#bc0004",
     status:      formData.get("status") || "PLANNING",
@@ -149,6 +141,7 @@ export async function updateProject(id: string, formData: FormData): Promise<Act
       priority:  parsed.data.priority as never,
       startDate: parsed.data.startDate ? new Date(parsed.data.startDate) : undefined,
       dueDate:   parsed.data.dueDate ? new Date(parsed.data.dueDate) : undefined,
+      client:      formData.has("client") ? (parsed.data.client || null) : undefined,
       completedAt: parsed.data.status ? (parsed.data.status === "COMPLETED" ? new Date() : null) : undefined,
     },
   });
@@ -315,4 +308,14 @@ export async function updateProjectMemberRole(projectId: string, userId: string,
   revalidatePath(`/projects/${projectId}`);
   revalidatePath("/projects");
   return { success: true, data: null };
+}
+
+/** Lightweight list for pickers (agenda items, decisions, goals). */
+export async function getProjectOptions() {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+  return prisma.project.findMany({
+    select: { id: true, name: true, emoji: true, color: true, ownerId: true, status: true },
+    orderBy: { name: "asc" },
+  });
 }

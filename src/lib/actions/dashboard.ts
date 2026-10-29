@@ -11,16 +11,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     return { totalProjects: 0, activeProjects: 0, completedProjects: 0, totalTasks: 0, openTasks: 0, overdueTasks: 0, teamSize: 0 };
   }
 
-  const uid = session.user.id;
-
   const [totalProjects, activeProjects, completedProjects, totalTasks, openTasks, overdueTasks, teamSize] =
     await Promise.all([
-      prisma.project.count({ where: { OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } }),
-      prisma.project.count({ where: { status: ProjectStatus.ACTIVE, OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } }),
-      prisma.project.count({ where: { status: ProjectStatus.COMPLETED, OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } }),
-      prisma.task.count({ where: { project: { OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } } }),
-      prisma.task.count({ where: { status: { notIn: [TaskStatus.DONE, TaskStatus.BLOCKED] }, project: { OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } } }),
-      prisma.task.count({ where: { dueDate: { lt: new Date() }, status: { notIn: [TaskStatus.DONE] }, project: { OR: [{ ownerId: uid }, { members: { some: { userId: uid } } }] } } }),
+      prisma.project.count(),
+      prisma.project.count({ where: { status: ProjectStatus.ACTIVE } }),
+      prisma.project.count({ where: { status: ProjectStatus.COMPLETED } }),
+      prisma.task.count(),
+      prisma.task.count({ where: { status: { notIn: [TaskStatus.DONE, TaskStatus.BLOCKED] } } }),
+      prisma.task.count({ where: { dueDate: { lt: new Date() }, status: { notIn: [TaskStatus.DONE] } } }),
       prisma.user.count({ where: { passwordHash: { not: null } } }),
     ]);
 
@@ -32,12 +30,6 @@ export async function getRecentActivity(limit = 10): Promise<ActivityWithRelatio
   if (!session?.user?.id) return [];
 
   return prisma.activityLog.findMany({
-    where: {
-      OR: [
-        { userId: session.user.id },
-        { project: { members: { some: { userId: session.user.id } } } },
-      ],
-    },
     include: {
       user: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
       project: { select: { id: true, name: true } },
@@ -52,9 +44,6 @@ export async function getProjectStatusDistribution() {
   if (!session?.user?.id) return [];
 
   const projects = await prisma.project.findMany({
-    where: {
-      OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }],
-    },
     select: { status: true },
   });
 
@@ -75,9 +64,6 @@ export async function getTaskCompletionTrend() {
 
   const tasks = await prisma.task.findMany({
     where: {
-      project: {
-        OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }],
-      },
       status: TaskStatus.DONE,
     },
     select: { completedAt: true, updatedAt: true },
@@ -105,13 +91,12 @@ export async function getTeamWorkloadData() {
   const session = await auth();
   if (!session?.user?.id) return [];
 
-  // Open tasks per assignee, limited to projects the viewer can see.
+  // Open tasks per assignee across the company.
   const groups = await prisma.task.groupBy({
     by: ["assigneeId"],
     where: {
       assigneeId: { not: null },
       status: { notIn: [TaskStatus.DONE, TaskStatus.BLOCKED] },
-      project: { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
     },
     _count: { _all: true },
   });

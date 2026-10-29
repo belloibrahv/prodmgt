@@ -19,7 +19,7 @@ export default function ActivityFeed({ activity }: { activity: ActivityWithRelat
             <EmptyHeader>
               <EmptyMedia variant="icon"><Activity /></EmptyMedia>
               <EmptyTitle>No activity yet</EmptyTitle>
-              <EmptyDescription>Updates to projects and tasks will appear here.</EmptyDescription>
+              <EmptyDescription>Updates to projects, meetings and decisions will appear here.</EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (

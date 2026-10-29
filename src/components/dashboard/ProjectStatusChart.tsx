@@ -32,7 +32,7 @@ export default function ProjectStatusChart({ data }: Props) {
     <Card className="shadow-xs">
       <CardHeader>
         <CardTitle>Project status</CardTitle>
-        <CardDescription>All projects you can access</CardDescription>
+        <CardDescription>The whole company portfolio</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4">
         {total === 0 ? (

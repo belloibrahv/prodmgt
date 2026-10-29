@@ -76,7 +76,10 @@ export default function EditProjectModal({ open, onClose, project }: Props) {
           </div>
         </div>
 
-        <Input name="name" label="Project name" placeholder="e.g. Client Portal v2" required defaultValue={project.name} />
+        <div className="grid grid-cols-2 gap-3">
+          <Input name="name" label="Project name" placeholder="e.g. Soft e Box Website" required defaultValue={project.name} />
+          <Input name="client" label="Client" placeholder="e.g. Abu Twins, or Internal" defaultValue={project.client ?? ""} />
+        </div>
         <Textarea name="description" label="Description" placeholder="What is this project about?" defaultValue={project.description ?? ""} />
 
         <div className="grid grid-cols-2 gap-3">

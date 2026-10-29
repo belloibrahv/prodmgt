@@ -42,7 +42,7 @@ export default function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md supports-backdrop-filter:bg-background/70 sm:px-6">
+      <header data-slot="site-header" className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur-md supports-backdrop-filter:bg-background/70 sm:px-6">
         <SidebarTrigger className="-ml-1.5 text-muted-foreground" />
         <Separator orientation="vertical" className="mr-1 data-vertical:h-4 data-vertical:self-center" />
 

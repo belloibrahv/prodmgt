@@ -1,7 +1,7 @@
 import type {
   User, Project, Task, Milestone, Document, Comment,
   ProjectMember, ActivityLog, Tag, ProjectStatus, TaskStatus,
-  Priority, MemberRole, DocType,
+  Priority, MemberRole, DocType, Health,
 } from "@prisma/client";
 
 // ── Re-export Prisma enums ────────────────────────────────────
@@ -19,6 +19,8 @@ export type ProjectWithRelations = Project & {
   tasks: Task[];
   milestones: Milestone[];
   documents: DocumentWithRelations[];
+  /** Latest check-in only, where loaded. */
+  statusUpdates?: { health: Health; createdAt: Date }[];
   _count: { tasks: number; documents: number; members: number };
 };
 

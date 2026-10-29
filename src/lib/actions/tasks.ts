@@ -68,7 +68,6 @@ export async function getTasksForProject(projectId: string): Promise<TaskWithRel
     where: {
       projectId,
       parentId: null,
-      project: { OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }] },
     },
     include: taskInclude,
     orderBy: { position: "asc" },
@@ -83,12 +82,6 @@ export async function getAllTasks(): Promise<TaskWithRelations[]> {
     return await prisma.task.findMany({
       where: {
         parentId: null,
-        project: {
-          OR: [
-            { ownerId: session.user.id },
-            { members: { some: { userId: session.user.id } } },
-          ],
-        },
       },
       include: taskInclude,
       orderBy: [{ dueDate: "asc" }, { priority: "desc" }],

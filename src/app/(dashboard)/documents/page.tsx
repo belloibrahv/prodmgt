@@ -11,20 +11,13 @@ export default async function DocumentsPage() {
 
   const [documents, projects] = await Promise.all([
     prisma.document.findMany({
-      where: {
-        project: {
-          OR: [
-            { ownerId: session.user.id },
-            { members: { some: { userId: session.user.id } } },
-          ],
-        },
-      },
       include: {
         project: { select: { id: true, name: true, color: true, emoji: true } },
         author: { select: { id: true, name: true, email: true, image: true, jobTitle: true } },
       },
       orderBy: { updatedAt: "desc" },
     }),
+    // New documents can only go into projects the user belongs to.
     prisma.project.findMany({
       where: {
         OR: [

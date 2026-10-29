@@ -72,7 +72,10 @@ export default function NewProjectModal({ open, onClose }: Props) {
           </div>
         </div>
 
-        <Input name="name" label="Project name" placeholder="e.g. Client Portal v2" required />
+        <div className="grid grid-cols-2 gap-3">
+          <Input name="name" label="Project name" placeholder="e.g. Soft e Box Website" required />
+          <Input name="client" label="Client" placeholder="e.g. Abu Twins, or Internal" />
+        </div>
         <Textarea name="description" label="Description" placeholder="What is this project about?" />
 
         <div className="grid grid-cols-2 gap-3">

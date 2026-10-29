@@ -69,17 +69,31 @@ model User {
   updatedAt         DateTime  @updatedAt
 
   // Auth
-  accounts     Account[]
-  sessions     Session[]
+  accounts Account[]
+  sessions Session[]
 
   // Project Manager relations
-  ownedProjects   Project[]        @relation("ProjectOwner")
-  memberships     ProjectMember[]
-  assignedTasks   Task[]           @relation("TaskAssignee")
-  createdTasks    Task[]           @relation("TaskCreator")
-  comments        Comment[]
-  documents       Document[]
-  activityLogs    ActivityLog[]
+  ownedProjects Project[]       @relation("ProjectOwner")
+  memberships   ProjectMember[]
+  assignedTasks Task[]          @relation("TaskAssignee")
+  createdTasks  Task[]          @relation("TaskCreator")
+  comments      Comment[]
+  documents     Document[]
+  activityLogs  ActivityLog[]
+
+  // Business operating system relations
+  chairedMeetings   Meeting[]          @relation("MeetingChair")
+  createdMeetings   Meeting[]          @relation("MeetingCreator")
+  meetingAttendance MeetingAttendee[]
+  ownedMeetingItems MeetingItem[]      @relation("MeetingItemOwner")
+  ownedActions      ActionItem[]       @relation("ActionOwner")
+  createdActions    ActionItem[]       @relation("ActionCreator")
+  statusUpdates     StatusUpdate[]
+  proposedDecisions Decision[]         @relation("DecisionProposer")
+  madeDecisions     Decision[]         @relation("DecisionMaker")
+  ownedObjectives   Objective[]
+  ownedKeyResults   KeyResult[]
+  keyResultCheckIns KeyResultCheckIn[]
 
   @@map("users")
 }
@@ -132,14 +146,16 @@ model Project {
   /// Icon key from src/lib/project-icons.ts (column predates icons, hence the name).
   emoji       String        @default("folder")
   color       String        @default("#bc0004")
+  /// Client or internal business unit the project is delivered for.
+  client      String?
   status      ProjectStatus @default(PLANNING)
   priority    Priority      @default(MEDIUM)
   startDate   DateTime?
   dueDate     DateTime?
   completedAt DateTime?
 
-  ownerId   String
-  owner     User   @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId String
+  owner   User   @relation("ProjectOwner", fields: [ownerId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -151,6 +167,12 @@ model Project {
   documents    Document[]
   tags         ProjectTag[]
   activityLogs ActivityLog[]
+
+  statusUpdates StatusUpdate[]
+  meetingItems  MeetingItem[]
+  actionItems   ActionItem[]
+  decisions     Decision[]
+  objectives    Objective[]
 
   @@map("projects")
 }
@@ -178,26 +200,26 @@ model Task {
   dueDate     DateTime?
   completedAt DateTime?
   position    Int        @default(0)
-  estimate    Int?       // hours
+  estimate    Int? // hours
 
-  projectId   String
-  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  assigneeId  String?
-  assignee    User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId String?
+  assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
 
-  creatorId   String
-  creator     User    @relation("TaskCreator", fields: [creatorId], references: [id])
+  creatorId String
+  creator   User   @relation("TaskCreator", fields: [creatorId], references: [id])
 
   milestoneId String?
   milestone   Milestone? @relation(fields: [milestoneId], references: [id])
 
-  parentId    String?
-  parent      Task?   @relation("SubTasks", fields: [parentId], references: [id])
-  subtasks    Task[]  @relation("SubTasks")
+  parentId String?
+  parent   Task?   @relation("SubTasks", fields: [parentId], references: [id])
+  subtasks Task[]  @relation("SubTasks")
 
-  tags        TaskTag[]
-  comments    Comment[]
+  tags     TaskTag[]
+  comments Comment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -282,17 +304,319 @@ model TaskTag {
 }
 
 model ActivityLog {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   action    String
-  entity    String  // "task" | "project" | "document"
+  entity    String // "task" | "project" | "document"
   entityId  String
   detail    String?
   userId    String
-  user      User    @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
 
   @@map("activity_logs")
+}
+
+// ── BUSINESS OPERATING SYSTEM ────────────────────────────────
+// Meetings and their minutes, check-ins, decisions and goals.
+
+/// Traffic-light health shared by check-ins and minute items.
+enum Health {
+  ON_TRACK
+  AT_RISK
+  OFF_TRACK
+  BLOCKED
+  ON_HOLD
+  NOT_STARTED
+  DONE
+}
+
+enum MeetingType {
+  WEEKLY_REVIEW
+  MIDWEEK_CHECKIN
+  WEEKLY_REPORT
+  MANAGEMENT
+  CLIENT
+  OTHER
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MeetingItemKind {
+  PROJECT_UPDATE
+  DISCUSSION
+  DECISION
+  RECOMMENDATION
+  ANNOUNCEMENT
+}
+
+enum ActionStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum DecisionStatus {
+  PROPOSED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  DEFERRED
+  IMPLEMENTED
+}
+
+enum DecisionCategory {
+  STRATEGIC
+  OPERATIONAL
+  FINANCIAL
+  TECHNICAL
+  PEOPLE
+  CLIENT
+  SECURITY
+}
+
+model Meeting {
+  id           String        @id @default(cuid())
+  title        String
+  type         MeetingType   @default(WEEKLY_REVIEW)
+  status       MeetingStatus @default(SCHEDULED)
+  scheduledAt  DateTime
+  purpose      String?       @db.Text
+  /// Closing summary written when the minutes are finalised.
+  summary      String?       @db.Text
+  location     String?
+  recordingUrl String?
+  /// External attendees who don't have an account, comma separated.
+  guests       String?
+  nextReviewAt DateTime?
+  completedAt  DateTime?
+
+  chairId     String?
+  chair       User?   @relation("MeetingChair", fields: [chairId], references: [id], onDelete: SetNull)
+  createdById String
+  createdBy   User    @relation("MeetingCreator", fields: [createdById], references: [id])
+
+  /// The meeting whose follow-ups this one reviews.
+  previousId String?
+  previous   Meeting?  @relation("MeetingFollowUp", fields: [previousId], references: [id], onDelete: SetNull)
+  followUps  Meeting[] @relation("MeetingFollowUp")
+
+  attendees     MeetingAttendee[]
+  items         MeetingItem[]
+  actionItems   ActionItem[]
+  statusUpdates StatusUpdate[]
+  decisions     Decision[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scheduledAt])
+  @@map("meetings")
+}
+
+model MeetingAttendee {
+  meetingId String
+  userId    String
+  present   Boolean @default(true)
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, userId])
+  @@map("meeting_attendees")
+}
+
+/// One numbered entry in the minutes.
+model MeetingItem {
+  id         String          @id @default(cuid())
+  meetingId  String
+  meeting    Meeting         @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  position   Int             @default(0)
+  kind       MeetingItemKind @default(PROJECT_UPDATE)
+  title      String
+  health     Health?
+  /// Short status line, e.g. "Proposal submitted; letter outstanding".
+  statusNote String?
+  discussion String?         @db.Text
+  /// What must be reported at the next review.
+  followUp   String?         @db.Text
+
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  ownerId    String?
+  owner      User?     @relation("MeetingItemOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  decisionId String?
+  decision   Decision? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+
+  actionItems ActionItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([meetingId, position])
+  @@map("meeting_items")
+}
+
+/// An accountable deliverable: owner, deadline, status.
+model ActionItem {
+  id          String       @id @default(cuid())
+  title       String
+  notes       String?      @db.Text
+  status      ActionStatus @default(OPEN)
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  ownerId     String?
+  owner       User?   @relation("ActionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdById String
+  createdBy   User    @relation("ActionCreator", fields: [createdById], references: [id])
+
+  meetingId     String?
+  meeting       Meeting?     @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  meetingItemId String?
+  meetingItem   MeetingItem? @relation(fields: [meetingItemId], references: [id], onDelete: SetNull)
+  projectId     String?
+  project       Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  decisionId    String?
+  decision      Decision?    @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId, status])
+  @@map("action_items")
+}
+
+/// Structured progress report: completed, in progress, outstanding, challenges, next action.
+model StatusUpdate {
+  id            String    @id @default(cuid())
+  health        Health
+  completed     String?   @db.Text
+  inProgress    String?   @db.Text
+  outstanding   String?   @db.Text
+  challenges    String?   @db.Text
+  nextAction    String?   @db.Text
+  nextActionDue DateTime?
+
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  meetingId String?
+  meeting   Meeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId, createdAt])
+  @@map("status_updates")
+}
+
+model Decision {
+  id        String           @id @default(cuid())
+  title     String
+  context   String?          @db.Text
+  status    DecisionStatus   @default(PROPOSED)
+  category  DecisionCategory @default(OPERATIONAL)
+  impact    Priority         @default(MEDIUM)
+  /// The decision as recorded once made.
+  outcome   String?          @db.Text
+  rationale String?          @db.Text
+  decideBy  DateTime?
+  decidedAt DateTime?
+
+  proposerId String
+  proposer   User     @relation("DecisionProposer", fields: [proposerId], references: [id])
+  deciderId  String?
+  decider    User?    @relation("DecisionMaker", fields: [deciderId], references: [id], onDelete: SetNull)
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  meetingId  String?
+  meeting    Meeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+
+  options      DecisionOption[]
+  meetingItems MeetingItem[]
+  actionItems  ActionItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("decisions")
+}
+
+model DecisionOption {
+  id          String   @id @default(cuid())
+  decisionId  String
+  decision    Decision @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  label       String
+  description String?  @db.Text
+  cost        Decimal? @db.Decimal(14, 2)
+  selected    Boolean  @default(false)
+  position    Int      @default(0)
+
+  @@map("decision_options")
+}
+
+model Objective {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  /// Label such as "Q4 2026" or "FY 2026".
+  period      String
+  startDate   DateTime
+  endDate     DateTime
+  archived    Boolean  @default(false)
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  keyResults KeyResult[]
+  projects   Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("objectives")
+}
+
+model KeyResult {
+  id           String  @id @default(cuid())
+  title        String
+  /// Display unit, e.g. "%", "NGN", "clients".
+  unit         String?
+  startValue   Float   @default(0)
+  targetValue  Float
+  currentValue Float   @default(0)
+
+  objectiveId String
+  objective   Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  ownerId     String?
+  owner       User?     @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  checkIns KeyResultCheckIn[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("key_results")
+}
+
+model KeyResultCheckIn {
+  id          String    @id @default(cuid())
+  keyResultId String
+  keyResult   KeyResult @relation(fields: [keyResultId], references: [id], onDelete: Cascade)
+  value       Float
+  note        String?
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([keyResultId, createdAt])
+  @@map("key_result_check_ins")
 }
